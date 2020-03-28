@@ -1,0 +1,14 @@
+{
+  "available-fitness-points" : 15,
+  "games-statistics" : {
+    "eggcatcher" : {
+      "calories-burnt" : 231,
+      "duration" : 120,
+      "fitness-points" : 30,
+      "game-points" : 20
+    }
+  },
+  "total-calories-burnt" : 20,
+  "total-duration" : 1234,
+  "total-fitness-points" : 35
+}
