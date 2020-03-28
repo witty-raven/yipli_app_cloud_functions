@@ -52,7 +52,7 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
             playerActivityStatistics["total-duration"] += (duration);
             playerActivityStatistics["total-fitness-points"] += fitnessPoints;
 
-            if (playerActivityStatistics["games-statistics"][gameId] !== null) {
+            if (playerActivityStatistics["games-statistics"][gameId]) {
                 playerActivityStatistics["games-statistics"][gameId]["calories-burnt"] += calories;
                 playerActivityStatistics["games-statistics"][gameId]["duration"] += (duration);
                 playerActivityStatistics["games-statistics"][gameId]["fitness-points"] += fitnessPoints;
