@@ -36,8 +36,7 @@ exports.calculateCalories = (playerActionCounts, intensityLevel) => {
     let calories = 0.0;
     for (var actionType in playerActionCounts) {
         if (this.unitActionCalorieMap[actionType] !== null) {
-            if(this.unitActionCalorieMap[actionType][intensityLevel] != null)
-            {
+            if (this.unitActionCalorieMap[actionType][intensityLevel] !== null) {
                 calories += parseInt(playerActionCounts[actionType]) * this.unitActionCalorieMap[actionType][intensityLevel];
             }
 
@@ -72,12 +71,12 @@ exports.unitActionFitnessPointsFactorMap = {
         "low": 1.5,
         "medium": 1.7,
         "high": 2
-    }
+    },
 
     "stop": {
-         "low": 0.25,
-         "medium": 0.25,
-         "high": 0.25
+        "low": 0.25,
+        "medium": 0.25,
+        "high": 0.25
     }
 }
 
@@ -86,10 +85,9 @@ exports.calculateFitnessPoints = (duration, playerActionCounts, intensityLevel) 
     let totalActionCount = 0;
     for (var actionType in playerActionCounts) {
         //totalActionCount += playerActionCounts[actionType];
-        if (this.unitActionFitnessPointsFactorMap[actionType] != null) {
-            if(this.unitActionFitnessPointsFactorMap[actionType][intensityLevel] != null)
-            {
-               totalActionCount += parseInt(playerActionCounts[actionType]) * this.unitActionFitnessPointsFactorMap[actionType][intensityLevel];
+        if (this.unitActionFitnessPointsFactorMap[actionType] !== null) {
+            if (this.unitActionFitnessPointsFactorMap[actionType][intensityLevel] !== null) {
+                totalActionCount += parseInt(playerActionCounts[actionType]) * this.unitActionFitnessPointsFactorMap[actionType][intensityLevel];
             }
 
         }
