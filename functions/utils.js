@@ -1,8 +1,8 @@
 exports.unitActionCalorieMap = {
     "left-move": {
-        "low": 3,
-        "medium": 5,
-        "high": 7
+        "low": 2,
+        "medium": 4,
+        "high": 6
     },
     "right-move": {
         "low": 3,
