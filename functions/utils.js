@@ -20,9 +20,9 @@ exports.unitActionCalorieMap = {
         "high": 2
     },
     "running": {
-        "low": 0.3,
-        "medium": 0.5,
-        "high": 0.7
+        "low": 0.05,
+        "medium": 0.07,
+        "high": 0.08
     },
     "stop": {
         "low": 0.1,
@@ -68,9 +68,9 @@ exports.unitActionFitnessPointsFactorMap = {
         "high": 10
     },
     "running": {
-        "low": 1,
-        "medium": 1.5,
-        "high": 2
+        "low": 0.5,
+        "medium": 0.7,
+        "high": 0.8
     },
 
     "stop": {
