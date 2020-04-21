@@ -1,33 +1,33 @@
 exports.unitActionCalorieMap = {
     "left-move": {
-        "low": 3,
-        "medium": 5,
-        "high": 7
+        "low": 2,
+        "medium": 2,
+        "high": 3
     },
     "right-move": {
-        "low": 3,
-        "medium": 5,
-        "high": 7
+        "low": 2,
+        "medium": 2,
+        "high": 3
     },
     "jump": {
-        "low": 7,
-        "medium": 9,
-        "high": 11
-    },
-    "walk": {
-        "low": 2,
-        "medium": 4,
+        "low": 4,
+        "medium": 5,
         "high": 6
     },
+    "walk": {
+        "low": 1,
+        "medium": 2,
+        "high": 2
+    },
     "running": {
-        "low": 0.4,
-        "medium": 0.8,
-        "high": 1.2
+        "low": 0.3,
+        "medium": 0.5,
+        "high": 0.7
     },
     "stop": {
-        "low": 1,
-        "medium": 1,
-        "high": 1
+        "low": 0.1,
+        "medium": 0.1,
+        "high": 0.1
     }
 }
 
@@ -48,35 +48,35 @@ exports.calculateCalories = (playerActionCounts, intensityLevel) => {
 
 exports.unitActionFitnessPointsFactorMap = {
     "left-move": {
-        "low": 1,
-        "medium": 1,
-        "high": 1
+        "low": 7,
+        "medium": 10,
+        "high": 13
     },
     "right-move": {
-        "low": 1,
-        "medium": 1,
-        "high": 1
+        "low": 7,
+        "medium": 10,
+        "high": 13
     },
     "jump": {
-        "low": 1.5,
-        "medium": 1.7,
-        "high": 2
+        "low": 15,
+        "medium": 20,
+        "high": 25
     },
     "walk": {
-        "low": 0.7,
-        "medium": 0.7,
-        "high": 0.7
+        "low": 5,
+        "medium": 7,
+        "high": 10
     },
     "running": {
-        "low": 0.25,
-        "medium": 0.50,
-        "high": 1
+        "low": 1,
+        "medium": 1.5,
+        "high": 2
     },
 
     "stop": {
-        "low": 0.1,
-        "medium": 0.1,
-        "high": 0.1
+        "low": 1,
+        "medium": 1,
+        "high": 1
     }
 }
 
@@ -93,6 +93,6 @@ exports.calculateFitnessPoints = (duration, playerActionCounts, intensityLevel) 
         }
 
     }
-    fitnessPoints = totalActionCount * duration / 10;
+    fitnessPoints = (totalActionCount + duration) * 10;
     return Math.round(fitnessPoints);
 }
