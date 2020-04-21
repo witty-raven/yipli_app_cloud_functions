@@ -42,7 +42,7 @@ exports.calculateCalories = (playerActionCounts, intensityLevel) => {
 
         }
     }
-    return Math.round(calories);
+    return Math.round(calories*0.2);
 }
 
 

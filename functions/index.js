@@ -57,15 +57,18 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
                 playerActivityStatistics["games-statistics"][gameId]["duration"] += (duration);
                 playerActivityStatistics["games-statistics"][gameId]["fitness-points"] += fitnessPoints;
                 playerActivityStatistics["games-statistics"][gameId]["game-points"] += parseInt(playerSessionData["points"]);
-
+               
             } else {
                 playerActivityStatistics["games-statistics"][gameId] = {
                     "calories-burnt": calories,
                     "duration": duration,
                     "fitness-points": fitnessPoints,
-                    "game-points": parseInt(playerSessionData["points"])
+                    "game-points": parseInt(playerSessionData["points"]),
+                    
                 }
             }
+             if(playerSessionData["game-data"])
+                    playerActivityStatistics["games-statistics"][gameId]["game-data"] = playerSessionData["game-data"];
             console.log(playerActivityStatistics);
 
             const playerSessionDataToUpdate = snapshot.toJSON();
