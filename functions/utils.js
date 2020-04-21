@@ -42,7 +42,7 @@ exports.calculateCalories = (playerActionCounts, intensityLevel) => {
 
         }
     }
-    return Math.round(calories*0.2);
+    return Math.round(calories * 0.2);
 }
 
 
@@ -93,6 +93,6 @@ exports.calculateFitnessPoints = (duration, playerActionCounts, intensityLevel) 
         }
 
     }
-    fitnessPoints = (totalActionCount + duration) * 10;
+    fitnessPoints = (totalActionCount + duration) * 5;
     return Math.round(fitnessPoints);
 }
