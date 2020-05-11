@@ -6,8 +6,8 @@ var sampleData = {
   "intensity-level": "low",
   "mat-id": "-M3HgyBMOl9OssN8T6sq",
   "player-action-counts": {
-    "left-move": 29,
-    "right-move": 25
+    "left move": 29,
+    "right move": 25
   },
   "player-height": "120",
   "player-id": "-M2gpqPIAsBF_GMOSdRo",

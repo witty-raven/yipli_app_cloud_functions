@@ -67,7 +67,7 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
                     
                 }
             }
-             if(playerSessionData["game-data"])
+            if(playerSessionData["game-data"])
                     playerActivityStatistics["games-statistics"][gameId]["game-data"] = playerSessionData["game-data"];
             console.log(playerActivityStatistics);
 

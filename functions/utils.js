@@ -1,15 +1,15 @@
 exports.unitActionCalorieMap = {
-    "left-move": {
+    "left move": {
         "low": 2,
         "medium": 2,
         "high": 3
     },
-    "right-move": {
+    "right move": {
         "low": 2,
         "medium": 2,
         "high": 3
     },
-    "jump": {
+    "jumping": {
         "low": 4,
         "medium": 5,
         "high": 6
@@ -39,7 +39,6 @@ exports.calculateCalories = (playerActionCounts, intensityLevel) => {
             if (this.unitActionCalorieMap[actionType][intensityLevel] !== null) {
                 calories += parseInt(playerActionCounts[actionType]) * this.unitActionCalorieMap[actionType][intensityLevel];
             }
-
         }
     }
     return Math.round(calories * 0.2);
@@ -47,17 +46,17 @@ exports.calculateCalories = (playerActionCounts, intensityLevel) => {
 
 
 exports.unitActionFitnessPointsFactorMap = {
-    "left-move": {
+    "left move": {
         "low": 7,
         "medium": 10,
         "high": 13
     },
-    "right-move": {
+    "right move": {
         "low": 7,
         "medium": 10,
         "high": 13
     },
-    "jump": {
+    "jumping": {
         "low": 15,
         "medium": 20,
         "high": 25
@@ -72,7 +71,6 @@ exports.unitActionFitnessPointsFactorMap = {
         "medium": 0.7,
         "high": 0.8
     },
-
     "stop": {
         "low": 1,
         "medium": 1,
@@ -89,9 +87,7 @@ exports.calculateFitnessPoints = (duration, playerActionCounts, intensityLevel) 
             if (this.unitActionFitnessPointsFactorMap[actionType][intensityLevel] !== null) {
                 totalActionCount += parseInt(playerActionCounts[actionType]) * this.unitActionFitnessPointsFactorMap[actionType][intensityLevel];
             }
-
         }
-
     }
     fitnessPoints = (totalActionCount + duration) * 5;
     return Math.round(fitnessPoints);
