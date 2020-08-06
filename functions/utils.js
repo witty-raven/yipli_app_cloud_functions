@@ -1,94 +1,48 @@
 exports.unitActionCalorieMap = {
-    "left move": {
-        "low": 2,
-        "medium": 2,
-        "high": 3
-    },
-    "right move": {
-        "low": 2,
-        "medium": 2,
-        "high": 3
-    },
-    "jumping": {
-        "low": 4,
-        "medium": 5,
-        "high": 6
-    },
-    "walk": {
-        "low": 1,
-        "medium": 2,
-        "high": 2
-    },
-    "running": {
-        "low": 0.05,
-        "medium": 0.07,
-        "high": 0.08
-    },
-    "stop": {
-        "low": 0.1,
-        "medium": 0.1,
-        "high": 0.1
-    }
+    "left move": 0.1,
+    "right move": 0.1,
+    "jumping": 0.1,
+    "running": 0.04,
+    "jump in": 0.1,
+    "jump out": 0.1,
+    "stop":0,
 }
 
-exports.calculateCalories = (playerActionCounts, intensityLevel) => {
+exports.calculateCalories = (playerActionCounts) => {
 
     let calories = 0.0;
     for (var actionType in playerActionCounts) {
         if (this.unitActionCalorieMap[actionType] !== null) {
-            if (this.unitActionCalorieMap[actionType][intensityLevel] !== null) {
-                calories += parseInt(playerActionCounts[actionType]) * this.unitActionCalorieMap[actionType][intensityLevel];
+            if (this.unitActionCalorieMap[actionType]!== null) {
+                calories += parseInt(playerActionCounts[actionType]) * this.unitActionCalorieMap[actionType];
             }
         }
     }
-    return Math.round(calories * 0.2);
+    return Math.round(calories);
 }
 
 
 exports.unitActionFitnessPointsFactorMap = {
-    "left move": {
-        "low": 7,
-        "medium": 10,
-        "high": 13
-    },
-    "right move": {
-        "low": 7,
-        "medium": 10,
-        "high": 13
-    },
-    "jumping": {
-        "low": 15,
-        "medium": 20,
-        "high": 25
-    },
-    "walk": {
-        "low": 5,
-        "medium": 7,
-        "high": 10
-    },
-    "running": {
-        "low": 0.5,
-        "medium": 0.7,
-        "high": 0.8
-    },
-    "stop": {
-        "low": 1,
-        "medium": 1,
-        "high": 1
-    }
+    "left move": 10,
+    "right move": 10,
+    "jumping": 10,
+    "running": 4,
+    "jump in": 10,
+    "jump out": 10,
+    "stop":0,
 }
 
-exports.calculateFitnessPoints = (duration, playerActionCounts, intensityLevel) => {
+exports.calculateFitnessPoints = (duration, playerActionCounts) => {
     let fitnessPoints = 0;
     let totalActionCount = 0;
     for (var actionType in playerActionCounts) {
         //totalActionCount += playerActionCounts[actionType];
         if (this.unitActionFitnessPointsFactorMap[actionType] !== null) {
-            if (this.unitActionFitnessPointsFactorMap[actionType][intensityLevel] !== null) {
-                totalActionCount += parseInt(playerActionCounts[actionType]) * this.unitActionFitnessPointsFactorMap[actionType][intensityLevel];
+            if (this.unitActionFitnessPointsFactorMap[actionType]!== null) {
+                totalActionCount += parseInt(playerActionCounts[actionType]) * this.unitActionFitnessPointsFactorMap[actionType];
             }
         }
     }
-    fitnessPoints = (totalActionCount + duration) * 5;
+    fitnessPoints = totalActionCount;
     return Math.round(fitnessPoints);
 }
