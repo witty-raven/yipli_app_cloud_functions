@@ -34,7 +34,6 @@ exports.unitActionFitnessPointsFactorMap = {
 
 exports.calculateFitnessPoints = (duration, playerActionCounts) => {
     let fitnessPoints = 0;
-    let totalActionCount = 0;
     for (var actionType in playerActionCounts) {
         //totalActionCount += playerActionCounts[actionType];
         if (this.unitActionFitnessPointsFactorMap[actionType] !== null) {
@@ -43,6 +42,5 @@ exports.calculateFitnessPoints = (duration, playerActionCounts) => {
             }
         }
     }
-    fitnessPoints = totalActionCount;
     return Math.round(fitnessPoints);
 }
