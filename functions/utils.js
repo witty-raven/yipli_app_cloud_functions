@@ -38,7 +38,7 @@ exports.calculateFitnessPoints = (duration, playerActionCounts) => {
         //totalActionCount += playerActionCounts[actionType];
         if (this.unitActionFitnessPointsFactorMap[actionType] !== null) {
             if (this.unitActionFitnessPointsFactorMap[actionType]!== null) {
-                totalActionCount += parseInt(playerActionCounts[actionType]) * this.unitActionFitnessPointsFactorMap[actionType];
+                fitnessPoints += parseInt(playerActionCounts[actionType]) * this.unitActionFitnessPointsFactorMap[actionType];
             }
         }
     }
