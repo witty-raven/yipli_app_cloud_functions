@@ -2,6 +2,11 @@
   "rules": {
     ".read": "auth != null",
     ".write": "auth != null",
+    "inventory":{
+      "mats":{
+        ".indexOn":["mac-address"]
+      }
+    },
     "sessions":{
       "game-sessions":{
         ".indexOn":["player-id","timestamp"]
