@@ -1,6 +1,7 @@
 exports.unitActionCalorieMap = {
     "left move": 0.1,
     "right move": 0.1,
+    "jump": 0.1,
     "jumping": 0.1,
     "running": 0.04,
     "jump in": 0.1,
@@ -25,6 +26,7 @@ exports.calculateCalories = (playerActionCounts) => {
 exports.unitActionFitnessPointsFactorMap = {
     "left move": 10,
     "right move": 10,
+    "jump": 10,
     "jumping": 10,
     "running": 4,
     "jump in": 10,
