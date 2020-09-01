@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const utils = require('./utils');
+const playerSessionModel = require('./models/playerSessionModel')
 admin.initializeApp(functions.config().firebase);
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -11,10 +12,10 @@ admin.initializeApp(functions.config().firebase);
 exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-sessions/{sessionId}')
     .onCreate((snapshot, context) => {
 
-        const playerSessionData = snapshot.val();
+        const playerSessionDataJSON = snapshot.val();
+        const playerSessionDataModel = playerSessionModel.from(playerSessionDataJSON);
 
-        let userId = playerSessionData["user-id"];
-        let playerId = playerSessionData['player-id'];
+
         let playerActivityRef = `/profiles/users/${userId}/players/${playerId}/activity-statistics`;
         let playerDBRef = admin.database().ref(playerActivityRef);
         let playerActivityStatistics;
