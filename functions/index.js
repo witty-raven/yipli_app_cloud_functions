@@ -50,17 +50,17 @@ exports.processplayerSessionDataModel = functions.database.ref('/stage-bucket/pl
             playerSessionDataModelToUpdate["fitness-points"] = playerSessionDataModel.fitnessPoints;
 
 
-            let newSessionRef = admin.database().ref('/sessions/game-sessions').push();
-            let newSessionPath = `/sessions/game-sessions/${newSessionRef.key}`;
+           
 
 
 
-            //TODO: Add changes for weekly/monthly
+           
             // /user-statistics/<<USER_ID>>/performance-statistics/Weekly/2020/45/playerData/<<PLAYER_ID>>
             var { weeklyStatsRef, weeklyStatsDataToUpdate } = await processWeeklyStatisticsData(playerSessionDataModel);
             var { monthlyStatsRef, monthStatsDataToUpdate } = await processMonthlyStatisticsData(playerSessionDataModel);
 
-
+            let newSessionRef = admin.database().ref('/sessions/game-sessions').push();
+            let newSessionPath = `/sessions/game-sessions/${newSessionRef.key}`;
             updatePayload[newSessionPath] = playerSessionDataModelToUpdate;
             updatePayload[playerActivityRef] = playerActivityStatistics;
             updatePayload[weeklyStatsRef] = weeklyStatsDataToUpdate;
