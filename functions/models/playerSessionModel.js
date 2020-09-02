@@ -1,4 +1,4 @@
-/* eslint-disable no-extra-boolean-cast */
+
 module.exports = class PlayerSessionDataModel {
     constructor(modelData) {
         this.age = modelData["age"];
@@ -28,6 +28,7 @@ module.exports = class PlayerSessionDataModel {
         if (this.timestampDate) {
             return this.timestampDate.getFullYear();
         }
+        return null;
     }
 
     // This script is released to the public domain and may be used, modified and
@@ -77,14 +78,14 @@ module.exports = class PlayerSessionDataModel {
         modelData.calories = json["calories"] || 0;
 
         modelData.gameData;
-        if (!!json["game-data"]) {
+        if (json["game-data"]) {
             modelData.gameData = {};
             modelData.gameData = json["game-data"];
             
         }
 
         modelData.playerActionCounts;
-        if (!!json["player-action-counts"]) {
+        if (json["player-action-counts"]) {
             modelData.playerActionCounts = {};
             modelData.playerActionCounts = json["player-action-counts"];
            

@@ -11,7 +11,7 @@ admin.initializeApp(functions.config().firebase);
 //  response.send("Hello from Firebase!");
 // });
 
-exports.processplayerSessionDataModel = functions.database.ref('/stage-bucket/player-sessions/{sessionId}')
+exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-sessions/{sessionId}')
     .onCreate((snapshot) => {
 
         const playerSessionDataModelJSON = snapshot.val();
@@ -30,7 +30,7 @@ exports.processplayerSessionDataModel = functions.database.ref('/stage-bucket/pl
 
             const lastPlayedTimestamp = (playerSessionDataModel.timestamp);
             console.log(`lastPlayedTimestamp: ${lastPlayedTimestamp}`);
-            if (lastPlayedTimestamp === null) throw ("LAST TIME STAMP NOT SET! Please set the last played timestamp!");
+            if (lastPlayedTimestamp === null) throw new Error("LAST TIME STAMP NOT SET! Please set the last played timestamp!");
             playerActivityStatistics = playerActivityStatisticsSnapshot.val();
             console.log(playerActivityStatistics)
 
@@ -49,6 +49,12 @@ exports.processplayerSessionDataModel = functions.database.ref('/stage-bucket/pl
             playerSessionDataModelToUpdate["calories"] = playerSessionDataModel.calories;
             playerSessionDataModelToUpdate["fitness-points"] = playerSessionDataModel.fitnessPoints;
 
+
+           
+
+
+
+           
             // /user-statistics/<<USER_ID>>/performance-statistics/Weekly/2020/45/playerData/<<PLAYER_ID>>
             var { weeklyStatsRef, weeklyStatsDataToUpdate } = await processWeeklyStatisticsData(playerSessionDataModel);
             var { monthlyStatsRef, monthStatsDataToUpdate } = await processMonthlyStatisticsData(playerSessionDataModel);
@@ -84,7 +90,7 @@ async function processWeeklyStatisticsData(playerSessionDataModel) {
 
     if (currentWeeklyStatsDataSnapshot) {
         let currentWeeklyStatsData = currentWeeklyStatsDataSnapshot.val();
-        if (!!currentWeeklyStatsData) {
+        if (currentWeeklyStatsData) {
             weeklyStatsDataToUpdate = {
                 "fitnessPoints": playerSessionDataModel.fitnessPoints,
                 "calories": playerSessionDataModel.calories,
@@ -111,7 +117,7 @@ async function processMonthlyStatisticsData(playerSessionDataModel) {
 
     if (currentMonthlyStatsDataSnapshot) {
         let currentMonthlyStatsData = currentMonthlyStatsDataSnapshot.val();
-        if (!!currentMonthlyStatsData) {
+        if (currentMonthlyStatsData) {
             monthlyStatsDataToUpdate = {
                 "fitnessPoints": playerSessionDataModel.fitnessPoints,
                 "calories": playerSessionDataModel.calories,
