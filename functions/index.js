@@ -49,12 +49,6 @@ exports.processplayerSessionDataModel = functions.database.ref('/stage-bucket/pl
             playerSessionDataModelToUpdate["calories"] = playerSessionDataModel.calories;
             playerSessionDataModelToUpdate["fitness-points"] = playerSessionDataModel.fitnessPoints;
 
-
-           
-
-
-
-           
             // /user-statistics/<<USER_ID>>/performance-statistics/Weekly/2020/45/playerData/<<PLAYER_ID>>
             var { weeklyStatsRef, weeklyStatsDataToUpdate } = await processWeeklyStatisticsData(playerSessionDataModel);
             var { monthlyStatsRef, monthStatsDataToUpdate } = await processMonthlyStatisticsData(playerSessionDataModel);

@@ -76,25 +76,18 @@ module.exports = class PlayerSessionDataModel {
         modelData.fitnessPoints = json["fitness-points"] || 0;
         modelData.calories = json["calories"] || 0;
 
-        modelData.gameData = null;
+        modelData.gameData;
         if (!!json["game-data"]) {
             modelData.gameData = {};
-            try {
-                modelData.gameData.highScore = parseInt(json["game-data"]["high-score"]) || 0;
-                modelData.gameData.moneyEarned = parseInt(json["game-data"]["money-earned"]) || 0;
-            } catch (e) {
-                modelData.gameData = {
-                    highScore: 0,
-                    moneyEarned: 0
-                }
-            }
+            modelData.gameData = json["game-data"];
+            
         }
 
-        modelData.playerActionCounts = null;
+        modelData.playerActionCounts;
         if (!!json["player-action-counts"]) {
             modelData.playerActionCounts = {};
             modelData.playerActionCounts = json["player-action-counts"];
-            //TODO: Need to check if the actions need to be listed.
+           
         }
         modelData["timestamp"] = json["timestamp"];
 
