@@ -50,6 +50,10 @@ module.exports = class PlayerSessionDataModel {
     getDayOfTheWeek(){
         return this.timestampDate.getDay();
     }
+
+    getDayOfTheMonth(){
+        return this.timestampDate.getUTCDate();
+    }
     // Returns the four-digit year corresponding to the ISO week of the date.
     getWeekYear() {
         this.timestampDate.setDate(this.timestampDate.getDate() + 3 - (this.timestampDate.getDay() + 6) % 7);
