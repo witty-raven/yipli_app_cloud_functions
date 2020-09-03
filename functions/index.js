@@ -12,13 +12,16 @@ admin.initializeApp(functions.config().firebase);
 // });
 
 exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-sessions/{sessionId}')
-    .onCreate((snapshot) => {
+    .onCreate((snapshot, context) => {
+        console.log("------------------ FUNCTION STARTED ------------------");
+        const playerSessionDataJSON = snapshot.val();
+        console.log("------------------ DATA PARSED ------------------");
+        console.debug(playerSessionDataJSON);
+        console.log(playerSessionDataJSON);
+        const playerSessionDataModel = playerSessionModel.from(playerSessionDataJSON);
+        console.log("------------------ MODEL CREATED ------------------");
 
-        const playerSessionDataModelJSON = snapshot.val();
-        const playerSessionDataModel = playerSessionDataModelModel.fromJSON(playerSessionDataModelJSON);
-
-
-        let playerActivityRef = `/profiles/users/${playerSessionDataModel.userId}/players/${playerSessionDataModel.playerId}/activity-statistics`;
+        console.debug(playerSessionDataModel);
 
         let playerDBRef = admin.database().ref(playerActivityRef);
         let playerActivityStatistics;
@@ -39,18 +42,37 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
                 playerActivityStatistics = buildNewActivityStatistics(playerActivityStatistics, playerSessionDataModel);
             }
 
-            console.log(`Calories: ${playerSessionDataModel.calories} and Fitness Points:${playerSessionDataModel.fitnessPoints}`);
-            setActivityStatsDataFromModel(playerActivityStatistics, lastPlayedTimestamp, playerSessionDataModel);
+            console.log(`Calories: ${calories} and Fitness Points:${fitnessPoints}`);
+            playerActivityStatistics["last-played"] = lastPlayedTimestamp;
+            playerActivityStatistics["total-calories-burnt"] += calories;
+            playerActivityStatistics["total-duration"] += (duration);
+            playerActivityStatistics["total-fitness-points"] += fitnessPoints;
 
-            setGameActivityDataFromModel(playerActivityStatistics, playerSessionDataModel, lastPlayedTimestamp);
+            if (playerActivityStatistics["games-statistics"][gameId]) {
+                playerActivityStatistics["games-statistics"][gameId]["last-played"] = lastPlayedTimestamp;
+                playerActivityStatistics["games-statistics"][gameId]["calories-burnt"] += calories;
+                playerActivityStatistics["games-statistics"][gameId]["duration"] += (duration);
+                playerActivityStatistics["games-statistics"][gameId]["fitness-points"] += fitnessPoints;
+                playerActivityStatistics["games-statistics"][gameId]["game-points"] += parseInt(playerSessionData["points"]);
 
-            const playerSessionDataModelToUpdate = snapshot.toJSON();
-            console.log(playerSessionDataModelToUpdate);
-            playerSessionDataModelToUpdate["calories"] = playerSessionDataModel.calories;
-            playerSessionDataModelToUpdate["fitness-points"] = playerSessionDataModel.fitnessPoints;
+            } else {
+                playerActivityStatistics["games-statistics"][gameId] = {
+                    "last-played": lastPlayedTimestamp,
+                    "calories-burnt": calories,
+                    "duration": duration,
+                    "fitness-points": fitnessPoints,
+                    "game-points": parseInt(playerSessionData["points"]),
 
+                }
+            }
+            if (playerSessionData["game-data"])
+                playerActivityStatistics["games-statistics"][gameId]["game-data"] = playerSessionData["game-data"];
+            //console.log(playerActivityStatistics);
 
-           
+            const playerSessionDataToUpdate = snapshot.toJSON();
+            //console.log(playerSessionDataToUpdate);
+            playerSessionDataToUpdate["calories"] = calories;
+            playerSessionDataToUpdate["fitness-points"] = fitnessPoints;
 
 
 
@@ -63,13 +85,10 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
             let newSessionPath = `/sessions/game-sessions/${newSessionRef.key}`;
             updatePayload[newSessionPath] = playerSessionDataModelToUpdate;
             updatePayload[playerActivityRef] = playerActivityStatistics;
-            updatePayload[weeklyStatsRef] = weeklyStatsDataToUpdate;
-            updatePayload[monthlyStatsRef] = monthStatsDataToUpdate;
-
+            console.log("------------------ UPLOAD DATA CREATED ------------------");
             console.log(updatePayload);
             await admin.database().ref().update(updatePayload);
-
-
+            console.log("------------------ Function END ------------------");
             return snapshot.ref.remove();
 
         }).catch(exception => {
