@@ -2,7 +2,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 //const utils = require('./utils');
-const playerSessionDataModelModel = require('./models/playerSessionModel')
+const PlayerSessionDataModel = require('./models/playerSessionModel')
 admin.initializeApp(functions.config().firebase);
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -13,10 +13,15 @@ admin.initializeApp(functions.config().firebase);
 
 exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-sessions/{sessionId}')
     .onCreate((snapshot) => {
+        console.log(` ----------------- FUNCTION STARTED : ${snapshot.key} -----------------`);
 
         const playerSessionDataModelJSON = snapshot.val();
-        const playerSessionDataModel = playerSessionDataModelModel.fromJSON(playerSessionDataModelJSON);
+        console.debug(playerSessionDataModelJSON);
+        console.log(playerSessionDataModelJSON);
+        const playerSessionDataModel = PlayerSessionDataModel.fromJSON(playerSessionDataModelJSON);
+        console.log(` ----------------- DATA PARSED : ${snapshot.key} -----------------`);
 
+        console.log(playerSessionDataModel);
 
         let playerActivityRef = `/profiles/users/${playerSessionDataModel.userId}/players/${playerSessionDataModel.playerId}/activity-statistics`;
 
@@ -48,13 +53,6 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
             console.log(playerSessionDataModelToUpdate);
             playerSessionDataModelToUpdate["calories"] = playerSessionDataModel.calories;
             playerSessionDataModelToUpdate["fitness-points"] = playerSessionDataModel.fitnessPoints;
-
-
-           
-
-
-
-           
             // /user-statistics/<<USER_ID>>/performance-statistics/Weekly/2020/45/playerData/<<PLAYER_ID>>
             var { weeklyStatsRef, weeklyStatsDataToUpdate } = await processWeeklyStatisticsData(playerSessionDataModel);
             var { monthlyStatsRef, monthStatsDataToUpdate } = await processMonthlyStatisticsData(playerSessionDataModel);
@@ -66,11 +64,16 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
             updatePayload[weeklyStatsRef] = weeklyStatsDataToUpdate;
             updatePayload[monthlyStatsRef] = monthStatsDataToUpdate;
 
+
+            console.log(` ----------------- UPLOADING CHANGES : ${snapshot.key} -----------------`);
+
             console.log(updatePayload);
             await admin.database().ref().update(updatePayload);
 
+            console.log(` ----------------- FUNCTION END : ${snapshot.key} -----------------`);
 
             return snapshot.ref.remove();
+            
 
         }).catch(exception => {
             console.error(exception);
