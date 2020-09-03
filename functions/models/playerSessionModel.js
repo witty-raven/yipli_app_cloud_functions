@@ -37,17 +37,19 @@ module.exports = class PlayerSessionDataModel {
 
     // Returns the ISO week of the date.
     getWeek() {
-        
-        this.timestampDate.setHours(0, 0, 0, 0);
+        let tempDate = new Date(this.timestamp);
+        tempDate.setHours(0, 0, 0, 0);
         // Thursday in current week decides the year.
-        this.timestampDate.setDate(this.timestampDate.getDate() + 3 - (this.timestampDate.getDay() + 6) % 7);
+        tempDate.setDate(tempDate.getDate() + 3 - (tempDate.getDay() + 6) % 7);
         // January 4 is always in week 1.
-        var week1 = new Date(this.timestampDate.getFullYear(), 0, 4);
+        var week1 = new Date(tempDate.getFullYear(), 0, 4);
         // Adjust to Thursday in week 1 and count number of weeks from date to week1.
-        return 1 + Math.round(((this.timestampDate.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+        return 1 + Math.round(((tempDate.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
     }
 
     getDayOfTheWeek(){
+        //console.log(`--------- GETTING DAY OF THE WEEK: ${this.timestampDate}`);
+        //console.log(`--------- RETURNING DAY OF THE WEEK: ${this.timestampDate.getDay()}`);
         return this.timestampDate.getDay();
     }
 
@@ -56,8 +58,10 @@ module.exports = class PlayerSessionDataModel {
     }
     // Returns the four-digit year corresponding to the ISO week of the date.
     getWeekYear() {
-        this.timestampDate.setDate(this.timestampDate.getDate() + 3 - (this.timestampDate.getDay() + 6) % 7);
-        return this.timestampDate.getFullYear();
+        if (this.timestampDate) {
+            return this.timestampDate.getFullYear();
+        }
+        return null;
     }
 
     getMonth(){
