@@ -13,65 +13,90 @@ admin.initializeApp(functions.config().firebase);
 
 exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-sessions/{sessionId}')
     .onCreate((snapshot) => {
-        console.log(` ----------------- FUNCTION STARTED : ${snapshot.key} -----------------`);
+        console.debug(` ----------------- FUNCTION STARTED : ${snapshot.key} -----------------`);
 
+        //* Fetching JSON data with values from the snapshot
         const playerSessionDataModelJSON = snapshot.val();
         console.debug(playerSessionDataModelJSON);
-        console.log(playerSessionDataModelJSON);
+        console.debug(playerSessionDataModelJSON);
+
+        //* Create Player Session Data Model from JSON
         const playerSessionDataModel = PlayerSessionDataModel.fromJSON(playerSessionDataModelJSON);
-        console.log(` ----------------- DATA PARSED : ${snapshot.key} -----------------`);
+        console.debug(` ----------------- DATA PARSED : ${snapshot.key} -----------------`);
 
-        console.log(playerSessionDataModel);
+        console.debug(playerSessionDataModel);
 
+        //* Getting player's current activity statistics database reference
         let playerActivityRef = `/profiles/users/${playerSessionDataModel.userId}/players/${playerSessionDataModel.playerId}/activity-statistics`;
-
         let playerDBRef = admin.database().ref(playerActivityRef);
         let playerActivityStatistics;
-
+        //* Getting player's current activity statistics values
         playerDBRef.once('value').then(async (playerActivityStatisticsSnapshot) => {
 
             let updatePayload = {};
 
+            //* Updating the player's last played timestamp
             const lastPlayedTimestamp = (playerSessionDataModel.timestamp);
-            console.log(`lastPlayedTimestamp: ${lastPlayedTimestamp}`);
+            console.debug(`lastPlayedTimestamp: ${lastPlayedTimestamp}`);
             if (lastPlayedTimestamp === null)
                 throw new Error("LAST TIME STAMP NOT SET! Please set the last played timestamp!");
-            playerActivityStatistics = playerActivityStatisticsSnapshot.val();
-            console.log(playerActivityStatistics);
 
+
+            playerActivityStatistics = playerActivityStatisticsSnapshot.val();
+            console.debug(playerActivityStatistics);
+
+            //* If activity statistics are not found, create for the player
             if (playerActivityStatistics === null) {
-                console.log("Player statistics null hence creating!");
+                console.debug("Player statistics null hence creating!");
                 playerActivityStatistics = buildNewActivityStatistics(playerActivityStatistics, playerSessionDataModel);
             }
+            console.debug(`Calories: ${playerSessionDataModel.calories} and Fitness Points:${playerSessionDataModel.fitnessPoints}`);
 
-            console.log(`Calories: ${playerSessionDataModel.calories} and Fitness Points:${playerSessionDataModel.fitnessPoints}`);
+            //* Update activity statistics 
             setActivityStatsDataFromModel(playerActivityStatistics, lastPlayedTimestamp, playerSessionDataModel);
 
+            //* Update game activity data
             setGameActivityDataFromModel(playerActivityStatistics, playerSessionDataModel, lastPlayedTimestamp);
 
+            //* Create player session data to insert in the game-sessions
             const playerSessionDataModelToUpdate = snapshot.toJSON();
-            console.log(playerSessionDataModelToUpdate);
+            console.debug(playerSessionDataModelToUpdate);
+            //* Update player session data to insert in the game-sessions
             playerSessionDataModelToUpdate["calories"] = playerSessionDataModel.calories;
             playerSessionDataModelToUpdate["fitness-points"] = playerSessionDataModel.fitnessPoints;
             // /user-statistics/<<USER_ID>>/performance-statistics/Weekly/2020/45/playerData/<<PLAYER_ID>>
-            var weeklyStatsDataToUpdate = await processWeeklyStatisticsData(playerSessionDataModel);
-            var monthStatsDataToUpdate = await processMonthlyStatisticsData(playerSessionDataModel);
 
+            //* Get weekly stats data to be updated;   Get monthly stats data to be updated; Get daily stats data to be updated
+            var [weeklyStatsDataToUpdate, monthStatsDataToUpdate, dailyStatsDataToUpdate] = await Promise.all([
+                processWeeklyStatisticsData(playerSessionDataModel),
+                processMonthlyStatisticsData(playerSessionDataModel),
+                processDailyStatisticsData(playerSessionDataModel)]);
+
+            //* Get database reference for the game-sessions
             let newSessionRef = admin.database().ref('/sessions/game-sessions').push();
             let newSessionPath = `/sessions/game-sessions/${newSessionRef.key}`;
             updatePayload[newSessionPath] = playerSessionDataModelToUpdate;
             updatePayload[playerActivityRef] = playerActivityStatistics;
+
             updatePayload[getWeeklyStatsRef(playerSessionDataModel)] = weeklyStatsDataToUpdate;
+            updatePayload[getWeeklyStatsForPlayerRef(playerSessionDataModel)] = weeklyStatsDataToUpdate;
+
             updatePayload[getMonthlyStatsRef(playerSessionDataModel)] = monthStatsDataToUpdate;
+            updatePayload[getMonthlyStatsForPlayerRef(playerSessionDataModel)] = monthStatsDataToUpdate;
+
+            updatePayload[getDailyStatsForPlayerRef(playerSessionDataModel)] = dailyStatsDataToUpdate;
+            updatePayload[getDailyStatsRef(playerSessionDataModel)] = dailyStatsDataToUpdate;
 
 
-            console.log(` ----------------- UPLOADING CHANGES : ${snapshot.key} -----------------`);
+            console.debug(` ----------------- UPLOADING CHANGES : ${snapshot.key} -----------------`);
 
-            console.log(updatePayload);
+            console.debug(updatePayload);
+            //* Update database reference for all data
             await admin.database().ref().update(updatePayload);
 
             console.log(` ----------------- FUNCTION END : ${snapshot.key} -----------------`);
 
+            //* Remove data from staging
             return snapshot.ref.remove();
 
 
@@ -92,30 +117,68 @@ async function processWeeklyStatisticsData(playerSessionDataModel) {
 
     if (currentWeeklyStatsDataSnapshot) {
         let currentWeeklyStatsData = currentWeeklyStatsDataSnapshot.val();
-        console.log(`Current weekly stats data: ${currentWeeklyStatsDataSnapshot.val()}`);
+        console.debug(`Current weekly stats data: ${currentWeeklyStatsDataSnapshot.val()}`);
         if (currentWeeklyStatsData) {
+            //* fp: Fitness Points; c: calories; dp: daily punch
             weeklyStatsDataToUpdate = {
-                "fitnessPoints": currentWeeklyStatsData["fitnessPoints"] + playerSessionDataModel.fitnessPoints,
-                "calories": currentWeeklyStatsData["calories"] + playerSessionDataModel.calories,
-                "dayPunch": currentWeeklyStatsData["dayPunch"]
+                "fp": currentWeeklyStatsData["fp"] + playerSessionDataModel.fitnessPoints,
+                "c": currentWeeklyStatsData["c"] + playerSessionDataModel.calories,
+                "d": currentWeeklyStatsData["d"] + playerSessionDataModel.duration,
+                "dp": currentWeeklyStatsData["dp"]
             };
 
         }
         else {
             weeklyStatsDataToUpdate = {
-                "fitnessPoints": playerSessionDataModel.fitnessPoints,
-                "calories": playerSessionDataModel.calories,
-                "dayPunch": {}
+                "fp": playerSessionDataModel.fitnessPoints,
+                "c": playerSessionDataModel.calories,
+                "d": playerSessionDataModel.duration,
+                "dp": {}
             };
         }
-        weeklyStatsDataToUpdate.dayPunch[playerSessionDataModel.getDayOfTheWeek()] = 1;
-        weeklyStatsDataToUpdate["totalDaysPunched"] = Object.keys(weeklyStatsDataToUpdate.dayPunch).length;
+        weeklyStatsDataToUpdate.dp[playerSessionDataModel.getDayOfTheWeek()] = true;
+        //* tpd: total days punched
+        weeklyStatsDataToUpdate["tdp"] = Object.keys(weeklyStatsDataToUpdate.dp).length;
     }
     return weeklyStatsDataToUpdate;
 }
 
+async function processDailyStatisticsData(playerSessionDataModel) {
+    var dailyStatsRef = admin.database().ref(getDailyStatsRef(playerSessionDataModel));
+    var currentDailyStatsDataSnapshot = await dailyStatsRef.once('value');
+    var dailyStatsDataToUpdate;
+
+    if (currentDailyStatsDataSnapshot) {
+        let currentDailyStatsData = currentDailyStatsDataSnapshot.val();
+        console.debug(`Current weekly stats data: ${currentDailyStatsDataSnapshot.val()}`);
+        if (currentDailyStatsData) {
+            //* fp: Fitness Points; c: calories; t: how many times today?; d: duration
+            dailyStatsDataToUpdate = {
+                "fp": currentDailyStatsData["fp"] + playerSessionDataModel.fitnessPoints,
+                "c": currentDailyStatsData["c"] + playerSessionDataModel.calories,
+                "d" :currentDailyStatsData["d"] + playerSessionDataModel.duration,
+                "t": currentDailyStatsData["t"] + 1
+            };
+
+        }
+        else {
+            dailyStatsDataToUpdate = {
+                "fp": playerSessionDataModel.fitnessPoints,
+                "c": playerSessionDataModel.calories,
+                "d" : playerSessionDataModel.duration,
+                "t": 1
+            };
+        }
+    }
+    return dailyStatsDataToUpdate;
+}
+
 function getWeeklyStatsRef(playerSessionDataModel) {
-    return `/user-statistics/${playerSessionDataModel.userId}/performance-statistics/weekly/${playerSessionDataModel.getWeekYear()}/${playerSessionDataModel.getWeek()}/playerData/${playerSessionDataModel.playerId}`;
+    return `/user-stats/${playerSessionDataModel.userId}/w/${playerSessionDataModel.getWeekYear()}/${playerSessionDataModel.getWeek()}/${playerSessionDataModel.playerId}`;
+}
+
+function getWeeklyStatsForPlayerRef(playerSessionDataModel) {
+    return `/user-stats/${playerSessionDataModel.userId}/${playerSessionDataModel.playerId}/w/${playerSessionDataModel.getWeekYear()}/${playerSessionDataModel.getWeek()}/`;
 }
 
 async function processMonthlyStatisticsData(playerSessionDataModel) {
@@ -125,33 +188,49 @@ async function processMonthlyStatisticsData(playerSessionDataModel) {
 
     if (currentMonthlyStatsDataSnapshot) {
         let currentMonthlyStatsData = currentMonthlyStatsDataSnapshot.val();
-        console.log(`Current weekly stats data: ${currentMonthlyStatsDataSnapshot.val()}`);
-
+        console.debug(`Current weekly stats data: ${currentMonthlyStatsDataSnapshot.val()}`);
+            
+        //* fp: Fitness Points; c: calories; tdp: how many times today?; d: duration
         if (currentMonthlyStatsData) {
             monthlyStatsDataToUpdate = {
-                "fitnessPoints": currentMonthlyStatsData["fitnessPoints"] + playerSessionDataModel.fitnessPoints,
-                "calories": currentMonthlyStatsData["calories"] + playerSessionDataModel.calories,
-                "dayPunch": currentMonthlyStatsData["dayPunch"]
+                "fp": currentMonthlyStatsData["fp"] + playerSessionDataModel.fitnessPoints,
+                "c": currentMonthlyStatsData["c"] + playerSessionDataModel.calories,
+                "dp": currentMonthlyStatsData["dp"]
             };
         }
         else {
             monthlyStatsDataToUpdate = {
-                "fitnessPoints": playerSessionDataModel.fitnessPoints,
-                "calories": playerSessionDataModel.calories,
-                "dayPunch": {}
+                "fp": playerSessionDataModel.fitnessPoints,
+                "c": playerSessionDataModel.calories,
+                "dp": {}
             };
         }
-        monthlyStatsDataToUpdate.dayPunch[playerSessionDataModel.getDayOfTheMonth()] = 1;
-        monthlyStatsDataToUpdate["totalDaysPunched"] = Object.keys(monthlyStatsDataToUpdate.dayPunch).length;
+        monthlyStatsDataToUpdate.dp[playerSessionDataModel.getDayOfTheMonth()] = true;
+
+        //* tpd: total days punched
+        monthlyStatsDataToUpdate["tdp"] = Object.keys(monthlyStatsDataToUpdate.dp).length;
     }
-    console.log("Sending Monthly updates");
-    console.log(monthlyStatsDataToUpdate);
-    console.log("Sent Monthly updates");
+    console.debug("Sending Monthly updates");
+    console.debug(monthlyStatsDataToUpdate);
+    console.debug("Sent Monthly updates");
     return monthlyStatsDataToUpdate;
 }
 
+
 function getMonthlyStatsRef(playerSessionDataModel) {
-    return `/user-statistics/${playerSessionDataModel.userId}/performance-statistics/monthly/${playerSessionDataModel.getYear()}/${playerSessionDataModel.getMonth()}/playerData/${playerSessionDataModel.playerId}`;
+    return `/user-stats/${playerSessionDataModel.userId}/m/${playerSessionDataModel.getYear()}/${playerSessionDataModel.getMonth()}/${playerSessionDataModel.playerId}`;
+}
+
+function getMonthlyStatsForPlayerRef(playerSessionDataModel) {
+    return `/user-stats/${playerSessionDataModel.userId}/${playerSessionDataModel.playerId}/m/${playerSessionDataModel.getYear()}/${playerSessionDataModel.getMonth()}/`;
+}
+
+function getDailyStatsRef(playerSessionDataModel) {
+    return `/user-stats/${playerSessionDataModel.userId}/d/${playerSessionDataModel.getYear()}/${playerSessionDataModel.getMonth()}/${playerSessionDataModel.getDayOfTheMonth()}/${playerSessionDataModel.playerId}`;
+}
+
+function getDailyStatsForPlayerRef(playerSessionDataModel) {
+    return `/user-stats/${playerSessionDataModel.userId}/${playerSessionDataModel.playerId}/d/${playerSessionDataModel.getYear()}/${playerSessionDataModel.getMonth()}/${playerSessionDataModel.getDayOfTheMonth()}`;
 }
 
 function setGameActivityDataFromModel(playerActivityStatistics, playerSessionDataModel, lastPlayedTimestamp) {
