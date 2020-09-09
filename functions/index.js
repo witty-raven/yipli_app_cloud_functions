@@ -195,6 +195,7 @@ async function processMonthlyStatisticsData(playerSessionDataModel) {
             monthlyStatsDataToUpdate = {
                 "fp": currentMonthlyStatsData["fp"] + playerSessionDataModel.fitnessPoints,
                 "c": currentMonthlyStatsData["c"] + playerSessionDataModel.calories,
+                "d": currentMonthlyStatsData["d"] + playerSessionDataModel.duration,
                 "dp": currentMonthlyStatsData["dp"]
             };
         }
@@ -202,6 +203,7 @@ async function processMonthlyStatisticsData(playerSessionDataModel) {
             monthlyStatsDataToUpdate = {
                 "fp": playerSessionDataModel.fitnessPoints,
                 "c": playerSessionDataModel.calories,
+                "d": playerSessionDataModel.duration,
                 "dp": {}
             };
         }
