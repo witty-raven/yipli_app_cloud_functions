@@ -75,9 +75,9 @@ module.exports = class PlayerSessionDataModel {
         modelData.duration = json["duration"] || 0;
         modelData.endTime = json["end-time"] || "";
         modelData.gameId = json["game-id"] || "";
-        modelData.intensityLevel = json["intensity-level"] || "";
+        modelData.intensityLevel = json["intensity"] || "";
         modelData.matId = json["mat-id"] || "";
-        modelData.playerHeight = json["player-height"] || "";
+        modelData.playerHeight = json["height"] || "";
         modelData.playerId = json["player-id"] || "";
         modelData.points = json["points"] || "";
         modelData.startTime = json["start-time"] || "";
@@ -93,9 +93,9 @@ module.exports = class PlayerSessionDataModel {
         }
 
         modelData.playerActionCounts;
-        if (json["player-action-counts"]) {
+        if (json["player-actions"]) {
             modelData.playerActionCounts = {};
-            modelData.playerActionCounts = json["player-action-counts"];
+            modelData.playerActionCounts = json["player-actions"];
            
         }
         modelData["timestamp"] = json["timestamp"];
