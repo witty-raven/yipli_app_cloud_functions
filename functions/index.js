@@ -26,7 +26,7 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
         console.debug(` ----------------- DATA PARSED : ${snapshot.key} -----------------`);
 
         console.debug(playerSessionDataModel);
-       
+
         //* Getting player's current activity statistics database reference
         let playerActivityRef = `/profiles/users/${playerSessionDataModel.userId}/players/${playerSessionDataModel.playerId}/activity-statistics`;
         let playerDBRef = admin.database().ref(playerActivityRef);
@@ -55,15 +55,15 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
 
             //* Update activity statistics 
             setActivityStatsDataFromModel(playerActivityStatistics, lastPlayedTimestamp, playerSessionDataModel);
-            
+
             var adventureGamingDataToUpdate = null;
             //* Update game activity data & adventure gaming data
-            if(playerSessionDataModel.type === "FITNESS_GAMING")
+            if (playerSessionDataModel.type === "FITNESS_GAMING")
                 setGameActivityDataFromModel(playerActivityStatistics, playerSessionDataModel, lastPlayedTimestamp);
-            else if(playerSessionDataModel.type === "ADVENTURE_GAMING")
+            else if (playerSessionDataModel.type === "ADVENTURE_GAMING")
                 adventureGamingDataToUpdate = await processAdventureGamingSessionData(playerSessionDataModel);
 
-            
+
 
             //* Create player session data to insert in the game-sessions
             const playerSessionDataModelToUpdate = snapshot.toJSON();
@@ -83,12 +83,12 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
             let newSessionRef = admin.database().ref('/sessions/game-sessions').push();
             let newSessionPath = `/sessions/game-sessions/${newSessionRef.key}`;
 
-            if(adventureGamingDataToUpdate){
+            if (adventureGamingDataToUpdate) {
                 updatePayload[getAdventureGamingStatsRef(playerSessionDataModel)] = adventureGamingDataToUpdate.toJSON();
             }
             updatePayload[newSessionPath] = playerSessionDataModelToUpdate;
             updatePayload[playerActivityRef] = playerActivityStatistics;
-            
+
             updatePayload[getWeeklyStatsRef(playerSessionDataModel)] = weeklyStatsDataToUpdate;
             updatePayload[getWeeklyStatsForPlayerRef(playerSessionDataModel)] = weeklyStatsDataToUpdate;
 
@@ -167,7 +167,7 @@ async function processDailyStatisticsData(playerSessionDataModel) {
             dailyStatsDataToUpdate = {
                 "fp": currentDailyStatsData["fp"] + playerSessionDataModel.fitnessPoints,
                 "c": currentDailyStatsData["c"] + playerSessionDataModel.calories,
-                "d" :currentDailyStatsData["d"] + playerSessionDataModel.duration,
+                "d": currentDailyStatsData["d"] + playerSessionDataModel.duration,
                 "t": currentDailyStatsData["t"] + 1
             };
 
@@ -176,7 +176,7 @@ async function processDailyStatisticsData(playerSessionDataModel) {
             dailyStatsDataToUpdate = {
                 "fp": playerSessionDataModel.fitnessPoints,
                 "c": playerSessionDataModel.calories,
-                "d" : playerSessionDataModel.duration,
+                "d": playerSessionDataModel.duration,
                 "t": 1
             };
         }
@@ -188,7 +188,7 @@ function getWeeklyStatsRef(playerSessionDataModel) {
     return `/user-stats/${playerSessionDataModel.userId}/w/${playerSessionDataModel.getWeekYear()}/${playerSessionDataModel.getWeek()}/${playerSessionDataModel.playerId}`;
 }
 
-function getAdventureGamingStatsRef(playerSessionDataModel){
+function getAdventureGamingStatsRef(playerSessionDataModel) {
     return `/agp/${playerSessionDataModel.userId}/${playerSessionDataModel.playerId}/world0/p0`;
 }
 
@@ -204,7 +204,7 @@ async function processMonthlyStatisticsData(playerSessionDataModel) {
     if (currentMonthlyStatsDataSnapshot) {
         let currentMonthlyStatsData = currentMonthlyStatsDataSnapshot.val();
         console.debug(`Current weekly stats data: ${currentMonthlyStatsDataSnapshot.val()}`);
-            
+
         //* fp: Fitness Points; c: calories; tdp: how many times today?; d: duration
         if (currentMonthlyStatsData) {
             monthlyStatsDataToUpdate = {
@@ -278,7 +278,7 @@ function setActivityStatsDataFromModel(playerActivityStatistics, lastPlayedTimes
     playerActivityStatistics["total-calories-burnt"] += playerSessionDataModel.calories;
     playerActivityStatistics["total-duration"] += (playerSessionDataModel.duration);
     playerActivityStatistics["total-fitness-points"] += playerSessionDataModel.fitnessPoints;
-    playerActivityStatistics["total-xp"] = (playerActivityStatistics["total-xp"]||0) + playerSessionDataModel.xp;
+    playerActivityStatistics["total-xp"] = (playerActivityStatistics["total-xp"] || 0) + playerSessionDataModel.xp;
 
 }
 
