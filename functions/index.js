@@ -3,6 +3,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 //const utils = require('./utils');
 const PlayerSessionDataModel = require('./models/playerSessionModel')
+const processAdventureGamingSessionData = require('./models/adventureGamingProcessor')
 admin.initializeApp(functions.config().firebase);
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -25,7 +26,7 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
         console.debug(` ----------------- DATA PARSED : ${snapshot.key} -----------------`);
 
         console.debug(playerSessionDataModel);
-
+       
         //* Getting player's current activity statistics database reference
         let playerActivityRef = `/profiles/users/${playerSessionDataModel.userId}/players/${playerSessionDataModel.playerId}/activity-statistics`;
         let playerDBRef = admin.database().ref(playerActivityRef);
@@ -54,9 +55,15 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
 
             //* Update activity statistics 
             setActivityStatsDataFromModel(playerActivityStatistics, lastPlayedTimestamp, playerSessionDataModel);
+            
+            var adventureGamingDataToUpdate = null;
+            //* Update game activity data & adventure gaming data
+            if(playerSessionDataModel.type === "FITNESS_GAMING")
+                setGameActivityDataFromModel(playerActivityStatistics, playerSessionDataModel, lastPlayedTimestamp);
+            else if(playerSessionDataModel.type === "ADVENTURE_GAMING")
+                adventureGamingDataToUpdate = await processAdventureGamingSessionData(playerSessionDataModel);
 
-            //* Update game activity data
-            setGameActivityDataFromModel(playerActivityStatistics, playerSessionDataModel, lastPlayedTimestamp);
+            
 
             //* Create player session data to insert in the game-sessions
             const playerSessionDataModelToUpdate = snapshot.toJSON();
@@ -75,9 +82,13 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
             //* Get database reference for the game-sessions
             let newSessionRef = admin.database().ref('/sessions/game-sessions').push();
             let newSessionPath = `/sessions/game-sessions/${newSessionRef.key}`;
+
+            if(adventureGamingDataToUpdate){
+                updatePayload[getAdventureGamingStatsRef(playerSessionDataModel)] = adventureGamingDataToUpdate.toJSON();
+            }
             updatePayload[newSessionPath] = playerSessionDataModelToUpdate;
             updatePayload[playerActivityRef] = playerActivityStatistics;
-
+            
             updatePayload[getWeeklyStatsRef(playerSessionDataModel)] = weeklyStatsDataToUpdate;
             updatePayload[getWeeklyStatsForPlayerRef(playerSessionDataModel)] = weeklyStatsDataToUpdate;
 
@@ -177,6 +188,10 @@ function getWeeklyStatsRef(playerSessionDataModel) {
     return `/user-stats/${playerSessionDataModel.userId}/w/${playerSessionDataModel.getWeekYear()}/${playerSessionDataModel.getWeek()}/${playerSessionDataModel.playerId}`;
 }
 
+function getAdventureGamingStatsRef(playerSessionDataModel){
+    return `/agp/${playerSessionDataModel.userId}/${playerSessionDataModel.playerId}/world0/p0`;
+}
+
 function getWeeklyStatsForPlayerRef(playerSessionDataModel) {
     return `/user-stats/${playerSessionDataModel.userId}/${playerSessionDataModel.playerId}/w/${playerSessionDataModel.getWeekYear()}/${playerSessionDataModel.getWeek()}/`;
 }
@@ -263,6 +278,8 @@ function setActivityStatsDataFromModel(playerActivityStatistics, lastPlayedTimes
     playerActivityStatistics["total-calories-burnt"] += playerSessionDataModel.calories;
     playerActivityStatistics["total-duration"] += (playerSessionDataModel.duration);
     playerActivityStatistics["total-fitness-points"] += playerSessionDataModel.fitnessPoints;
+    playerActivityStatistics["total-xp"] = (playerActivityStatistics["total-xp"]||0) + playerSessionDataModel.xp;
+
 }
 
 function buildNewActivityStatistics(playerActivityStatistics, playerSessionDataModel) {
