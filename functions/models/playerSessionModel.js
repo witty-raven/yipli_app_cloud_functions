@@ -25,6 +25,7 @@ module.exports = class PlayerSessionDataModel {
         this.agp = modelData["agp"] || {};
         this.calories = modelData["calories"];
         this.fitnessPoints = modelData.fitnessPoints;
+        this.fitnessCards = modelData.fitnessCards;
     }
 
     getYear() {
@@ -85,6 +86,8 @@ module.exports = class PlayerSessionDataModel {
         modelData.userId = json["user-id"] || "";
         modelData.fitnessPoints = json["fitness-points"] || 0;
         modelData.calories = json["calories"] || 0;
+
+        modelData.fitnessCards = json["fitness-cards"] || [];
 
         modelData.gameData;
         if (json["game-data"]) {

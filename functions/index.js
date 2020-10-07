@@ -279,6 +279,9 @@ function setActivityStatsDataFromModel(playerActivityStatistics, lastPlayedTimes
     playerActivityStatistics["total-duration"] += (playerSessionDataModel.duration);
     playerActivityStatistics["total-fitness-points"] += playerSessionDataModel.fitnessPoints;
     playerActivityStatistics["total-xp"] = (playerActivityStatistics["total-xp"] || 0) + playerSessionDataModel.xp;
+    playerSessionDataModel.fitnessCards.forEach(fitnessCardIndex => {
+        playerActivityStatistics["fitness-cards"][fitnessCardIndex] = (playerActivityStatistics["fitness-cards"][fitnessCardIndex] || 0) + 1;
+    });
 
 }
 
@@ -289,6 +292,7 @@ function buildNewActivityStatistics(playerActivityStatistics, playerSessionDataM
         "total-duration": 0,
         "total-fitness-points": 0,
         "redeemed-fitness-points": 0,
+        "fitness-cards": [],
         "games-statistics": {}
     };
     playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId] = null;
