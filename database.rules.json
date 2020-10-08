@@ -2,14 +2,49 @@
   "rules": {
     ".read": "auth != null",
     ".write": "auth != null",
-    "inventory":{
-      "mats":{
-        ".indexOn":["mac-address"]
+    "inventory": {
+      "mats": {
+        ".indexOn": [
+          "mac-address"
+        ]
       }
     },
-    "sessions":{
-      "game-sessions":{
-        ".indexOn":["player-id","timestamp"]
+    "sessions": {
+      "game-sessions": {
+        ".indexOn": [
+          "player-id",
+          "timestamp"
+        ]
+      }
+    },
+    "user-stats": {
+      "$userId": {
+        "w": {
+          "$year": {
+            "$month": {
+              "$date": {
+                "$playerId": {
+                  ".indexOn": [
+                    "fp"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "m": {
+          "$year": {
+            "$month": {
+              "$date": {
+                "$playerId": {
+                  ".indexOn": [
+                    "fp"
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
