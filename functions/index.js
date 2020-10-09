@@ -189,7 +189,7 @@ function getWeeklyStatsRef(playerSessionDataModel) {
 }
 
 function getAdventureGamingStatsRef(playerSessionDataModel) {
-    return `/agp/${playerSessionDataModel.userId}/${playerSessionDataModel.playerId}/world0/p0`;
+    return `/agp/${playerSessionDataModel.userId}/${playerSessionDataModel.playerId}/worlds/0/p0`;
 }
 
 function getWeeklyStatsForPlayerRef(playerSessionDataModel) {
