@@ -25,8 +25,8 @@ module.exports = async function (playerSessionDataModel) {
     } else {
         //* Add stats for current completed chapter session with above data
         playerAdventureGamingStatistics.progressStats.push({
-            chapterRef: playerSessionDataModel.agp.nextChapterRef,
-            classRef: playerSessionDataModel.agp.nextClassRef,
+            chapterRef: playerAdventureGamingStatistics.nextChapterRef,
+            classRef: playerAdventureGamingStatistics.nextClassRef,
             rating: playerSessionDataModel.agp.rating,
             chapFp: playerSessionDataModel.fitnessPoints,
             chapC: playerSessionDataModel.calories,
