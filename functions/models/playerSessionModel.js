@@ -12,7 +12,7 @@ module.exports = class PlayerSessionDataModel {
         this.points = modelData["points"];
         this.startTime = modelData["startTime"];
         this.userId = modelData["userId"];
-        this.gameData = modelData["gameData"] || {};
+        //this.gameData = modelData["gameData"] || {};
         this.playerActionCounts = modelData["playerActionCounts"] || {};
         this.timestamp = modelData["timestamp"] ? modelData["timestamp"] : null;
         if (this.timestamp)
@@ -89,12 +89,13 @@ module.exports = class PlayerSessionDataModel {
 
         modelData.fitnessCards = json["fitness-cards"] || [];
 
-        modelData.gameData;
-        if (json["game-data"]) {
-            modelData.gameData = {};
-            modelData.gameData = json["game-data"];
+        
+        // modelData.gameData;
+        // if (json["game-data"]) {
+        //     modelData.gameData = {};
+        //     modelData.gameData = json["game-data"];
 
-        }
+        // }
 
         modelData.playerActionCounts;
         if (json["player-actions"]) {

@@ -3,7 +3,8 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 //const utils = require('./utils');
 const PlayerSessionDataModel = require('./models/playerSessionModel')
-const processAdventureGamingSessionData = require('./models/adventureGamingProcessor')
+const processAdventureGamingSessionData = require('./models/adventureGamingProcessor');
+const { default: GameDataModel } = require('./models/gameDataModel');
 admin.initializeApp(functions.config().firebase);
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -63,7 +64,10 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
             else if (playerSessionDataModel.type === "ADVENTURE_GAMING")
                 adventureGamingDataToUpdate = await processAdventureGamingSessionData(playerSessionDataModel);
 
-
+            const gameDataToUpdate = GameDataModel.fromJSON(playerSessionDataModelJSON);
+            if (gameDataToUpdate.gameData !== null) {
+                updatePayload[getGameDataRef(playerSessionDataModel)] = gameDataToUpdate.gameData;
+            }
 
             //* Create player session data to insert in the game-sessions
             const playerSessionDataModelToUpdate = snapshot.toJSON();
@@ -184,6 +188,9 @@ async function processDailyStatisticsData(playerSessionDataModel) {
     return dailyStatsDataToUpdate;
 }
 
+function getGameDataRef(playerSessionDataModel){
+    return `/fgd/${playerSessionDataModel.userId}/${playerSessionDataModel.playerId}/${playerSessionDataModel.gameId}`;
+}
 function getWeeklyStatsRef(playerSessionDataModel) {
     return `/user-stats/${playerSessionDataModel.userId}/w/${playerSessionDataModel.getWeekYear()}/${playerSessionDataModel.getWeek()}/${playerSessionDataModel.playerId}`;
 }
