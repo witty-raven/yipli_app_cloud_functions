@@ -4,7 +4,7 @@ const admin = require('firebase-admin');
 //const utils = require('./utils');
 const PlayerSessionDataModel = require('./models/playerSessionModel')
 const processAdventureGamingSessionData = require('./models/adventureGamingProcessor');
-const { default: GameDataModel } = require('./models/gameDataModel');
+const GameDataModel = require('./models/gameDataModel');
 admin.initializeApp(functions.config().firebase);
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -286,6 +286,9 @@ function setActivityStatsDataFromModel(playerActivityStatistics, lastPlayedTimes
     playerActivityStatistics["total-duration"] += (playerSessionDataModel.duration);
     playerActivityStatistics["total-fitness-points"] += playerSessionDataModel.fitnessPoints;
     playerActivityStatistics["total-xp"] = (playerActivityStatistics["total-xp"] || 0) + playerSessionDataModel.xp;
+    if(!playerActivityStatistics["fitness-cards"]){
+        playerActivityStatistics["fitness-cards"] = {};
+    }
     playerSessionDataModel.fitnessCards.forEach(fitnessCardIndex => {
         playerActivityStatistics["fitness-cards"][fitnessCardIndex] = (playerActivityStatistics["fitness-cards"][fitnessCardIndex] || 0) + 1;
     });
