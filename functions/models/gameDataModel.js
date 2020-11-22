@@ -14,7 +14,6 @@ module.exports = class GameDataModel {
         if (json["game-data"]) {
             modelData.gameData = {};
             modelData.gameData = json["game-data"];
-
         }
 
         return new GameDataModel(modelData);

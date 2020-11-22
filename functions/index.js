@@ -263,7 +263,7 @@ function setGameActivityDataFromModel(playerActivityStatistics, playerSessionDat
         playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["calories-burnt"] += playerSessionDataModel.calories;
         playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["duration"] += (playerSessionDataModel.duration);
         playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["fitness-points"] += playerSessionDataModel.fitnessPoints;
-        playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["game-points"] += playerSessionDataModel.gameData.highScore ? (playerSessionDataModel.gameData.highScore) : 0;
+        playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["game-points"] += playerSessionDataModel.points ? (playerSessionDataModel.points) : 0;
 
     }
     else {
@@ -272,7 +272,7 @@ function setGameActivityDataFromModel(playerActivityStatistics, playerSessionDat
             "calories-burnt": playerSessionDataModel.calories,
             "duration": playerSessionDataModel.duration,
             "fitness-points": playerSessionDataModel.fitnessPoints,
-            "game-points": playerSessionDataModel.gameData.highScore ? (playerSessionDataModel.gameData.highScore) : 0,
+            "game-points": playerSessionDataModel.points ? (playerSessionDataModel.points) : 0,
         };
     }
     if (playerSessionDataModel.gameData)
