@@ -1,14 +1,40 @@
 {
-  "available-fitness-points" : 15,
   "games-statistics" : {
-    "eggcatcher" : {
-      "calories-burnt" : 231,
-      "duration" : 120,
-      "fitness-points" : 30,
-      "game-points" : 20
+    "metro-rush" : {
+      "calories-burnt" : 1,
+      "duration" : 124,
+      "fitness-points" : 101,
+      "game-points" : 2,
+      "last-played" : 1618554292350
+    },
+    "multiplayermayhem" : {
+      "calories-burnt" : 4,
+      "duration" : 496,
+      "fitness-points" : 404,
+      "game-points" : 16,
+      "last-played" : 1618554292350,
+      "minigames-stats" : {
+        "treewarrior" : {
+          "calories-burnt" : 3,
+          "duration" : 372,
+          "fitness-points" : 303,
+          "game-points" : 12,
+          "last-played" : 1618554292350
+        },
+        "penguinpop" : {
+          "calories-burnt" : 1,
+          "duration" : 124,
+          "fitness-points" : 101,
+          "game-points" : 2,
+          "last-played" : 1618554292350
+        }
+      }
     }
   },
-  "total-calories-burnt" : 20,
-  "total-duration" : 1234,
-  "total-fitness-points" : 35
+  "last-played" : 1618554292350,
+  "redeemed-fitness-points" : 0,
+  "total-calories-burnt" : 5,
+  "total-duration" : 620,
+  "total-fitness-points" : 505,
+  "total-xp" : 0
 }

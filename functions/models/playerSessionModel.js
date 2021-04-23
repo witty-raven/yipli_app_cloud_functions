@@ -3,14 +3,15 @@ module.exports = class PlayerSessionDataModel {
     constructor(modelData) {
         this.age = modelData["age"];
         this.duration = modelData["duration"];
-        this.endTime = modelData["endTime"];
+        // this.endTime = modelData["endTime"];
         this.gameId = modelData["gameId"];
+        this.miniGameId = modelData["miniGameId"];
         this.intensityLevel = modelData["intensityLevel"];
         this.matId = modelData["matId"];
         this.playerHeight = modelData["playerHeight"];
         this.playerId = modelData["playerId"];
         this.points = modelData["points"];
-        this.startTime = modelData["startTime"];
+        // this.startTime = modelData["startTime"];
         this.userId = modelData["userId"];
         //this.gameData = modelData["gameData"] || {};
         this.playerActionCounts = modelData["playerActionCounts"] || {};
@@ -78,6 +79,7 @@ module.exports = class PlayerSessionDataModel {
         modelData.age = json["age"] || 0;
         modelData.duration = json["duration"] || 0;
         modelData.gameId = json["game-id"] || "";
+        modelData.miniGameId = json["minigame-id"] || null;
         modelData.intensityLevel = json["intensity"] || "";
         modelData.matId = json["mat-id"] || "";
         modelData.playerHeight = json["height"] || "";
@@ -89,13 +91,6 @@ module.exports = class PlayerSessionDataModel {
 
         modelData.fitnessCards = json["fitness-cards"] || [];
 
-        
-        // modelData.gameData;
-        // if (json["game-data"]) {
-        //     modelData.gameData = {};
-        //     modelData.gameData = json["game-data"];
-
-        // }
 
         modelData.playerActionCounts;
         if (json["player-actions"]) {
@@ -104,7 +99,9 @@ module.exports = class PlayerSessionDataModel {
 
         }
         modelData.agp;
-        if (json["agp"]) {
+
+        //Todo : uncomment this code after adventure gaming feature completed.
+        /*if (json["agp"]) {
             modelData.agp = {};
             modelData.agp.nextChapterRef = json["agp"]["next-chap-ref"];
             modelData.agp.nextClassRef = json["agp"]["next-class-ref"];
@@ -113,7 +110,7 @@ module.exports = class PlayerSessionDataModel {
             modelData.agp.isRepeatedChapter = (!modelData.agp.nextChapterRef) ? true : false;
             modelData.agp.completedChapterIndex = json["agp"]["completed-chap-index"];
             modelData.agp.rating = json["agp"]["rating"];
-        }
+        }*/
 
         modelData["xp"] = json["xp"] || 0;
         modelData["timestamp"] = json["timestamp"];

@@ -9,6 +9,13 @@
         ]
       }
     },
+    "profiles": {
+      "users":{
+        ".indexOn":[
+          "contact-no"
+        ]
+      }
+    },
     "sessions": {
       "game-sessions": {
         ".indexOn": [
