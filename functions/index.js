@@ -52,6 +52,12 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
                 console.debug("Player statistics null hence creating!");
                 playerActivityStatistics = initializeNewActivityStats(playerActivityStatistics, playerSessionDataModel);
             }
+            else if (!playerActivityStatistics["last-played"]) {
+                //This is a scenario, when total-fitness-points are present, but no game-statistics.
+                // In this case, last-played will always be undefined.
+                console.debug("Player statistics not null, but no lastPlayedTimeStamp found..");
+                playerActivityStatistics = initializeActivityStatsExceptTotalFitnessPoints(playerActivityStatistics, playerSessionDataModel);
+            }
             console.debug(`Calories: ${playerSessionDataModel.calories} and Fitness Points:${playerSessionDataModel.fitnessPoints}`);
 
             //* Update activity statistics. This code does not handle game-statistics. 
@@ -510,6 +516,24 @@ function setActivityStatsDataFromModel(playerActivityStatistics, lastPlayedTimes
     });
     */
 
+}
+
+
+//This is a scenario to handle no game dataa, still total-fitness-points are present.
+//This could arise if player collects his daily fitness points before playing any game in his/her lifetime.
+function initializeActivityStatsExceptTotalFitnessPoints(playerActivityStatistics, playerSessionDataModel) {
+    playerActivityStatistics = {
+        "last-played": 0,
+        "total-calories-burnt": 0,
+        "total-duration": 0,
+        "total-fitness-points": playerActivityStatistics["total-fitness-points"],
+        "redeemed-fitness-points": 0,
+        "games-statistics": {}
+    };
+
+    playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId] = null;
+
+    return playerActivityStatistics;
 }
 
 function initializeNewActivityStats(playerActivityStatistics, playerSessionDataModel) {
