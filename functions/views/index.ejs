@@ -1,0 +1,118 @@
+<DOCTYPE html>
+  <html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YIPLI Leader Board</title>
+
+    <link rel="stylesheet" href="./app/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./app/assets/css/consts.css">
+
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script>
+      var leaderBoard =
+        {
+        <%for (var i = 0; i < leaderBoard.length; i++) {%>
+        "<%=i%>" : {
+          "player-name" : "<%=leaderBoard[i]['player-name']%>",
+          "user-name" : "<%=leaderBoard[i]['user-name']%>",
+          "player-profile-link" : "<%=leaderBoard[i]['player-profile-link']%>",
+          "play-time" : <%=leaderBoard[i]["play-time"] %>
+        },
+      <%}%>
+      }
+
+      leaderBoardArray = new Array();
+      for (var item in leaderBoard) {
+        leaderBoardArray.push(leaderBoard[item]);
+      }
+      leaderBoardArray.sort((a, b) => {
+        return a["play-time"] - b["play-time"];
+      });
+      leaderBoard = leaderBoardArray.reverse();
+      console.log(leaderBoard);
+
+      $(document).ready(function () {
+        console.log((($(window).width() * 25) / 100) / 8);
+        var nameCharLimit = (($(window).width() * 25) / 100) / 8;
+        $.get("./app/assets/schemas/list-item.html", (html) => {
+          for (var item in leaderBoard) {
+            var listItemSchema = $(html).clone();
+            leaderBoard[item]["player-name"] = leaderBoard[item]["player-name"].toLowerCase().replace(/\b[a-z]/g,letter => {return letter.toUpperCase()});
+            leaderBoard[item]["user-name"] = leaderBoard[item]["user-name"].toLowerCase().replace(/\b[a-z]/g,letter => {return letter.toUpperCase()});
+
+            if (leaderBoard[item]["player-name"].length < nameCharLimit) listItemSchema.find(".list-item-player-name").text(leaderBoard[item]["player-name"]);
+            else listItemSchema.find(".list-item-player-name").text(leaderBoard[item]["player-name"].substring(0, (nameCharLimit - 3)) + "...");
+            
+            listItemSchema.find(".list-item-user-name").text("(" + leaderBoard[item]["user-name"] + ")");
+            listItemSchema.find(".list-item-points").text(leaderBoard[item]["points"]);
+
+            var playtime = leaderBoard[item]["play-time"];
+            if (playtime > 60) {
+              var playtimeStr = Math.floor(playtime / 60) + " m ";
+              if((playtime - (Math.floor(playtime / 60) * 60))) playtimeStr = playtimeStr + (playtime - (Math.floor(playtime / 60) * 60)) + " s";
+              listItemSchema.find(".list-item-playtime").text(playtimeStr);
+            }
+            else listItemSchema.find(".list-item-playtime").text(playtime + " s");
+
+            listItemSchema.find(".list-item-profile-pic").attr("src", leaderBoard[item]["player-profile-link"])
+            listItemSchema.find(".list-item-rank").text(parseInt(item) + 1);
+
+            if (parseInt(item) == 0) listItemSchema.find(".rank-display").addClass("gold-medal");
+            else if (parseInt(item) == 1) listItemSchema.find(".rank-display").addClass("silver-medal");
+            else if (parseInt(item) == 2) listItemSchema.find(".rank-display").addClass("bronze-medal");
+            else listItemSchema.find(".rank-display").addClass("regular-medal");
+            // console.log(listItemSchema);
+            $(listItemSchema).appendTo("#list");
+          }
+        });
+      });
+    </script>
+    <script src="https://kit.fontawesome.com/4b8a4b95ff.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Karla&display=swap" rel="stylesheet">
+  </head>
+  <style>
+    @font-face {
+      font-family: "CandyShop";
+      src: url("./app/assets/fonts/CandyShopBlack.ttf") format("truetype");
+    }
+
+    .gold-medal {
+      background-image: url("./app/assets/img/awards/Gold-5.png");
+      background-size: 50px;
+      background-repeat: no-repeat;
+    }
+
+    .silver-medal {
+      background-image: url("./app/assets/img/awards/Silver-5.png");
+      background-size: 50px;
+      background-repeat: no-repeat;
+    }
+
+    .bronze-medal {
+      background-image: url("./app/assets/img/awards/Bronze-5.png");
+      background-size: 50px;
+      background-repeat: no-repeat;
+    }
+
+    .regular-medal {
+      background-image: url("./app/assets/img/awards/Regular-5.png");
+      background-size: 50px;
+      background-repeat: no-repeat;
+    }
+  </style>
+
+  <body>
+    <div class="leader-board-title text-align-center m-t-50">
+      <!-- <h1 class="text-color-tangerine text-bold">Heading</h1> -->
+      <img src="<%=bannerUrl%>" style="width: 100%;" alt="">
+    </div>
+    <div id="list" class="container" style="max-width: 768px;">
+
+    </div>
+  </body>
+
+  </html>

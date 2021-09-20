@@ -109,3 +109,4 @@ dist
 .idea/yipli_app_cloud_functions.iml
 functions/ref/.DS_Store
 functions/ref/adventure-gaming.ts
+firebase.json

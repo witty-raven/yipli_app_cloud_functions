@@ -28,6 +28,11 @@
         ".indexOn": [
           "mac-address"
         ]
+      },
+      "yipli-app" : {
+        "minimum-support-version" : {
+          ".read" : "auth.provider != 'anonymous'"
+        }
       }
     },
 
@@ -43,7 +48,7 @@
 
     "profiles" : {
       ".read": "true",
-      ".write": "auth.provider != 'anonymous'",
+      ".write": "auth != null",
       "users":{
         ".indexOn":[
           "contact-no",
@@ -77,7 +82,7 @@
 
     "stage-bucket" : {
       ".read": "auth != null",
-      ".write": "auth != null"
+      ".write": "true"
     },
 
     "user-stats" : {
@@ -103,7 +108,8 @@
               "$date": {
                 "$playerId": {
                   ".indexOn": [
-                    "fp"
+                    "fp",
+                    "c"
                   ]
                 }
               }

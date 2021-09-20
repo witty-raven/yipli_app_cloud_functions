@@ -13,6 +13,7 @@ module.exports = class PlayerSessionDataModel {
         this.points = modelData["points"];
         // this.startTime = modelData["startTime"];
         this.userId = modelData["userId"];
+        this.os = modelData["os"];
         //this.gameData = modelData["gameData"] || {};
         this.playerActionCounts = modelData["playerActionCounts"] || {};
         this.timestamp = modelData["timestamp"] ? modelData["timestamp"] : null;
@@ -86,6 +87,7 @@ module.exports = class PlayerSessionDataModel {
         modelData.playerId = json["player-id"] || "";
         modelData.points = json["points"] || "";
         modelData.userId = json["user-id"] || "";
+        modelData.os = json["os"] || "";
         modelData.fitnessPoints = json["fitness-points"] || 0;
         modelData.calories = json["calories"] || 0;
 

@@ -13,6 +13,23 @@ admin.initializeApp(functions.config().firebase);
 //  response.send("Hello from Firebase!");
 // });
 
+//Campaign code initilals start
+const bodyParser = require("body-parser");
+const express = require('express');
+const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static("public"));
+app.set('view engine', 'ejs');
+//Campaign code initilals end
+
+/*
+Section 1: Process Player Session Data
+Section 2: 
+*/
+
+const baseURL = "https://firebasestorage.googleapis.com/v0/b/yipli-project.appspot.com/o/";
+const urlPrams = "?alt=media";
+
 exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-sessions/{sessionId}')
     .onCreate((snapshot) => {
         console.debug(` ----------------- FUNCTION STARTED : ${snapshot.key} -----------------`);
@@ -124,11 +141,60 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
             //* Update database reference for all data
             await admin.database().ref().update(updatePayload);
 
-            console.log(` ----------------- FUNCTION END : ${snapshot.key} -----------------`);
+           
+           
+            
+            //*Metro-Rush campaign
+            if(playerSessionDataModel.gameId === "metrorush" && playerSessionDataModel.duration > 59){
+                  //* Writing player data in CAMPAIGN  for Metro Rush
+                   console.log(` ----------------- PROCESSING CAMPAIGN DATA -----------------`);
+            
+               //getting user details
+              var userDetailsPath = `/profiles/users/${playerSessionDataModel.userId}`;
+              let userNameDBRef = admin.database().ref(userDetailsPath +`/display-name`);
+         
+              let playerNameDBRef = admin.database().ref(userDetailsPath+`/players/${playerSessionDataModel.playerId}/name`);
+              let playerProfilePicDBRef = admin.database().ref(userDetailsPath+`/players/${playerSessionDataModel.playerId}/profile-pic-url`);
+              var familyName = await userNameDBRef.once('value');
+            
+              familyName = familyName.val();
+              console.log(` ----------------- FAMILY NAME : ${familyName} -----------------`);
+              if(!familyName)
+                familyName = "";
+              console.log(` ----------------- FAMILY NAME : ${familyName} -----------------`);
+              var playerName =  await playerNameDBRef.once('value');
+              playerName = playerName.val();
+              if(!playerName)
+                  playerName = "";
+              console.log(` ----------------- PLAYER NAME : ${playerName} -----------------`);
+              var playerProfilePicUrl =   await playerProfilePicDBRef.once('value');
+              playerProfilePicUrl =  playerProfilePicUrl.val();
+              if(!playerProfilePicUrl)
+                 playerProfilePicUrl = "placeholder_image.png";
+              console.log(` ----------------- PLAYER PROFILE PIC : ${playerProfilePicUrl} -----------------`);
+             
+         
 
+            await processCampaignData(playerSessionDataModel.playerId,familyName,playerName,playerProfilePicUrl,playerSessionDataModel.duration);      
+            
+            }
+  
+
+            //*Taking campaign play ccounter
+           
+            await processMetroRushDataCounter(playerSessionDataModel);
+            
+
+            //* OS level entries 
+            console.log(` ----------------- TAKING GAME PLAY OS ENTRY -----------------`);
+            await processOSLevelData(playerSessionDataModel);
+
+     
+            console.log(` ----------------- FUNCTION END : ${snapshot.key} -----------------`);
             //* Remove data from staging
             return snapshot.ref.remove();
 
+            
 
         }).catch(exception => {
             console.error(exception);
@@ -137,6 +203,7 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
         console.log(playerActivityStatistics);
 
     });
+
 
 exports.processPlayerInboxPlayedTimeData = functions.database.ref('/user-stats/{userId}/d/{yearId}/{monthId}/{dayId}/{playerId}/t')
     .onWrite((change, context)=>{           
@@ -160,11 +227,85 @@ exports.processPlayerInboxPlayedTimeData = functions.database.ref('/user-stats/{
                      afterPlayedTime >= 1800 ? platinumCardInboxEntryInDB(playerId,userId)
                     //  : afterPlayedTime >= 900  ? goldCardInboxEntryInDB(playerId,getTime,goldCardIndoxDBRef,goldCardTimeInboxDBRef,goldCardTitleInboxDBRef,goldCardDescriptionInboxDBRef)
                      :  console.log("=========== No any Cards are unlocked");
-                
+
         }     
 
-        return console.log("=== Function execution completed ===");
+        return console.log("=== Function execution completed ==="); 
     });
+
+    async function processOSLevelData(playerSessionDataModel){
+        var getOSLevelDataPath = `os-stats/${playerSessionDataModel.os}/${playerSessionDataModel.userId}`;
+        let osLevelEntries = admin.database().ref(getOSLevelDataPath);
+        let valueAtOSLevelDataObject = await osLevelEntries.once('value');
+        valueAtOSLevelDataObject = valueAtOSLevelDataObject.val();
+        if(!valueAtOSLevelDataObject){
+            valueAtOSLevelDataObject = {
+                "timestamp" : playerSessionDataModel.timestamp,
+                "duration" : playerSessionDataModel.duration,
+                "sessions-counter" : 1
+            }
+        }else{
+            valueAtOSLevelDataObject['duration'] = valueAtOSLevelDataObject[ 'duration'] + playerSessionDataModel.duration;
+            valueAtOSLevelDataObject['timestamp'] =  playerSessionDataModel.timestamp;
+            valueAtOSLevelDataObject['sessions-counter'] = valueAtOSLevelDataObject['sessions-counter'] + 1;
+        }
+        admin.database().ref(getOSLevelDataPath).update(valueAtOSLevelDataObject);
+    }
+    
+    
+
+   async function  processCampaignData(playerId,familyName,playerName,playerProfilePicUrl,duration)  {
+        var pathForCampaign = `/campaign/metrorush/${playerId}`;
+
+        console.log(" =========== CAMPAIGN DATA PROCESSING ===========");
+        
+        let getPlayerPathForCampaign = admin.database().ref(pathForCampaign);
+        var playerCampaignObj = await getPlayerPathForCampaign.once('value');
+        playerCampaignObj = playerCampaignObj.val();
+        console.log(" =========== ${playerCampaignObj} ===========");
+       // let oldDuration = playerCampaignObj['duration'];
+       if(!playerCampaignObj)
+       {     
+        playerCampaignObj = {
+            "user-name" : familyName,
+            "player-name" : playerName,
+            "profile-pic-url" : playerProfilePicUrl,
+            "duration" : duration
+        }
+       }
+       else{
+        if( playerCampaignObj['duration'] < duration) {
+            playerCampaignObj['duration'] = duration; 
+            playerCampaignObj['user-name'] = familyName;
+            playerCampaignObj['player-name'] = playerName;
+            playerCampaignObj['profile-pic-url'] = playerProfilePicUrl;
+           }
+       }
+
+       admin.database().ref(pathForCampaign).update(playerCampaignObj);
+       console.log(" =========== CAMPAIGN DATA PROCESSING DONE ===========");
+
+   }
+
+   async function processMetroRushDataCounter(playerSessionDataModel){
+     var getPathForMetroRushCounter = `campaign-traction/${playerSessionDataModel.gameId}/${playerSessionDataModel.playerId}`;
+     let metroRushCounter = admin.database().ref(getPathForMetroRushCounter);
+     let metroRushDataObject = await metroRushCounter.once('value');
+     metroRushDataObject= metroRushDataObject.val();
+     if(!metroRushDataObject){
+        metroRushDataObject = {
+            "duration" : playerSessionDataModel.duration,
+            "session-counter" : 1,
+            "last-played" : playerSessionDataModel.timestamp
+        }
+     }else{
+          metroRushDataObject['duration'] = metroRushDataObject['duration'] + playerSessionDataModel.duration;
+          metroRushDataObject['session-counter'] = metroRushDataObject['session-counter'] + 1;
+          metroRushDataObject['last-played'] = playerSessionDataModel.timestamp;
+     }
+     admin.database().ref(getPathForMetroRushCounter).update(metroRushDataObject);
+   }
+
 
     function goldCardInboxEntryInDB(playerId,userId){
         let timestamp = new Date();
@@ -569,3 +710,26 @@ function initializeNewMiniGamesStats(playerActivityStatistics, playerSessionData
     return playerActivityStatistics;
 
 }
+
+//Campaign main logic start
+app.get('/', (req, res) => {
+    var campaign = admin.database().ref("/campaign/metrorush/");
+    var leaderBoard = new Array();
+    var bannerUrl = baseURL + "banners%2Fcampaigns%2Fleaderboard_webpage_extension.png" + urlPrams;
+    campaign.once("value",(snapshot)=>{
+      snapshot.forEach(player => {
+          var profileURL = baseURL + "profile-pics%2F" +player.child("profile-pic-url").val() + urlPrams;
+          leaderBoard.push({
+            "player-name" : player.child("player-name").val(),
+            "user-name" : player.child("user-name").val(),
+            "player-profile-link" : profileURL,
+            "play-time" : player.child("duration").val()
+          })
+      })
+      res.render("index", { leaderBoard: leaderBoard, bannerUrl : bannerUrl});
+    })
+  });
+ //Campaign main logic end
+
+exports.app = functions.https.onRequest(app);
+
