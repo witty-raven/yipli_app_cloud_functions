@@ -6,29 +6,9 @@ const PlayerSessionDataModel = require('./models/playerSessionModel')
 const processAdventureGamingSessionData = require('./models/adventureGamingProcessor');
 const GameDataModel = require('./models/gameDataModel');
 admin.initializeApp(functions.config().firebase);
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//  response.send("Hello from Firebase!");
-// });
 
-//Campaign code initilals start
-const bodyParser = require("body-parser");
-const express = require('express');
-const app = express();
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static("public"));
-app.set('view engine', 'ejs');
-//Campaign code initilals end
-
-/*
-Section 1: Process Player Session Data
-Section 2: 
-*/
-
-const baseURL = "https://firebasestorage.googleapis.com/v0/b/yipli-project.appspot.com/o/";
-const urlPrams = "?alt=media";
+var leaderBoard = require("./leader-board/leaderBoard");
+var osStats = require("./os-stats/osStats");
 
 exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-sessions/{sessionId}')
     .onCreate((snapshot) => {
@@ -79,11 +59,11 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
 
             //* Update activity statistics. This code does not handle game-statistics. 
             setActivityStatsDataFromModel(playerActivityStatistics, lastPlayedTimestamp, playerSessionDataModel);
-            
+
             //* Update game activity data & adventure gaming data
             if (playerSessionDataModel.type === "FITNESS_GAMING")
                 setGameActivityStatsFromModel(playerActivityStatistics, playerSessionDataModel, lastPlayedTimestamp);
-            
+
             //TODO: uncomment this code after adventure gaming feature completed.
             /*
             var adventureGamingDataToUpdate = null;
@@ -114,14 +94,14 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
             //* Get database reference for the game-sessions
             let newSessionRef = admin.database().ref('/sessions/game-sessions').push();
             let newSessionPath = `/sessions/game-sessions/${newSessionRef.key}`;
-            
+
             //TODO: uncomment this code after adventure gaming feature completed.
             /*
             if (adventureGamingDataToUpdate) {
                 updatePayload[getAdventureGamingStatsRef(playerSessionDataModel)] = adventureGamingDataToUpdate.toJSON();
             }
             */
-           
+
             updatePayload[newSessionPath] = playerSessionDataModelToUpdate;
             updatePayload[playerActivityRef] = playerActivityStatistics;
 
@@ -141,225 +121,59 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
             //* Update database reference for all data
             await admin.database().ref().update(updatePayload);
 
-           
-           
-            
-            //*Metro-Rush campaign
-            if(playerSessionDataModel.gameId === "metrorush" && playerSessionDataModel.duration > 59){
-                  //* Writing player data in CAMPAIGN  for Metro Rush
-                   console.log(` ----------------- PROCESSING CAMPAIGN DATA -----------------`);
-            
-               //getting user details
-              var userDetailsPath = `/profiles/users/${playerSessionDataModel.userId}`;
-              let userNameDBRef = admin.database().ref(userDetailsPath +`/display-name`);
-         
-              let playerNameDBRef = admin.database().ref(userDetailsPath+`/players/${playerSessionDataModel.playerId}/name`);
-              let playerProfilePicDBRef = admin.database().ref(userDetailsPath+`/players/${playerSessionDataModel.playerId}/profile-pic-url`);
-              var familyName = await userNameDBRef.once('value');
-            
-              familyName = familyName.val();
-              console.log(` ----------------- FAMILY NAME : ${familyName} -----------------`);
-              if(!familyName)
-                familyName = "";
-              console.log(` ----------------- FAMILY NAME : ${familyName} -----------------`);
-              var playerName =  await playerNameDBRef.once('value');
-              playerName = playerName.val();
-              if(!playerName)
-                  playerName = "";
-              console.log(` ----------------- PLAYER NAME : ${playerName} -----------------`);
-              var playerProfilePicUrl =   await playerProfilePicDBRef.once('value');
-              playerProfilePicUrl =  playerProfilePicUrl.val();
-              if(!playerProfilePicUrl)
-                 playerProfilePicUrl = "placeholder_image.png";
-              console.log(` ----------------- PLAYER PROFILE PIC : ${playerProfilePicUrl} -----------------`);
-             
-         
-
-            await processCampaignData(playerSessionDataModel.playerId,familyName,playerName,playerProfilePicUrl,playerSessionDataModel.duration);      
-            
-            }
-  
 
             //*Taking campaign play ccounter
-           
+
             await processMetroRushDataCounter(playerSessionDataModel);
-            
 
-            //* OS level entries 
-            console.log(` ----------------- TAKING GAME PLAY OS ENTRY -----------------`);
-            await processOSLevelData(playerSessionDataModel);
-
-     
             console.log(` ----------------- FUNCTION END : ${snapshot.key} -----------------`);
             //* Remove data from staging
             return snapshot.ref.remove();
 
-            
 
         }).catch(exception => {
             console.error(exception);
         });
         // Grab the current value of what was written to the Realtime Database
         console.log(playerActivityStatistics);
+        //* OS level entries 
+        console.log(` ----------------- TAKING GAME PLAY OS ENTRY -----------------`);
+        osStats.processOSLevelData(playerSessionDataModel);
 
+        //LeaderBoard call
+        leaderBoard.postSession(snapshot.val());
     });
 
-
 exports.processPlayerInboxPlayedTimeData = functions.database.ref('/user-stats/{userId}/d/{yearId}/{monthId}/{dayId}/{playerId}/t')
-    .onWrite((change, context)=>{           
+    .onWrite((change, context) => {
         var beforePlayedTime = change.before.val();
         var afterPlayedTime = change.after.val();
-           
+
         //assigning playedId from database path
         var playerId = context.params.playerId;
         var userId = context.params.userId;
 
-        if(beforePlayedTime < 900) // 15 mins time check to process the special rewards.
-        {           
-                 //check for gold card and platinum card
-                 afterPlayedTime >= 1800 ? platinumCardInboxEntryInDB(playerId,userId)
-                 : afterPlayedTime >= 900  ? goldCardInboxEntryInDB(playerId,userId)
-                 :  console.log("=========== No any Cards are unlocked");   
-            
-        } else   if(beforePlayedTime < 1800) // 30 mins time check to process the special rewards.
+        if (beforePlayedTime < 900) // 15 mins time check to process the special rewards.
         {
-                     //check for gold card and platinum card
-                     afterPlayedTime >= 1800 ? platinumCardInboxEntryInDB(playerId,userId)
-                    //  : afterPlayedTime >= 900  ? goldCardInboxEntryInDB(playerId,getTime,goldCardIndoxDBRef,goldCardTimeInboxDBRef,goldCardTitleInboxDBRef,goldCardDescriptionInboxDBRef)
-                     :  console.log("=========== No any Cards are unlocked");
+            //check for gold card and platinum card
+            afterPlayedTime >= 1800 ? platinumCardInboxEntryInDB(playerId, userId)
+                : afterPlayedTime >= 900 ? goldCardInboxEntryInDB(playerId, userId)
+                    : console.log("=========== No any Cards are unlocked");
 
-        }     
+        } else if (beforePlayedTime < 1800) // 30 mins time check to process the special rewards.
+        {
+            //check for gold card and platinum card
+            afterPlayedTime >= 1800 ? platinumCardInboxEntryInDB(playerId, userId)
+                //  : afterPlayedTime >= 900  ? goldCardInboxEntryInDB(playerId,getTime,goldCardIndoxDBRef,goldCardTimeInboxDBRef,goldCardTitleInboxDBRef,goldCardDescriptionInboxDBRef)
+                : console.log("=========== No any Cards are unlocked");
 
-        return console.log("=== Function execution completed ==="); 
+        }
+
+        return console.log("=== Function execution completed ===");
     });
 
-    async function processOSLevelData(playerSessionDataModel){
-        var getOSLevelDataPath = `os-stats/${playerSessionDataModel.os}/${playerSessionDataModel.userId}`;
-        let osLevelEntries = admin.database().ref(getOSLevelDataPath);
-        let valueAtOSLevelDataObject = await osLevelEntries.once('value');
-        valueAtOSLevelDataObject = valueAtOSLevelDataObject.val();
-        if(!valueAtOSLevelDataObject){
-            valueAtOSLevelDataObject = {
-                "timestamp" : playerSessionDataModel.timestamp,
-                "duration" : playerSessionDataModel.duration,
-                "sessions-counter" : 1
-            }
-        }else{
-            valueAtOSLevelDataObject['duration'] = valueAtOSLevelDataObject[ 'duration'] + playerSessionDataModel.duration;
-            valueAtOSLevelDataObject['timestamp'] =  playerSessionDataModel.timestamp;
-            valueAtOSLevelDataObject['sessions-counter'] = valueAtOSLevelDataObject['sessions-counter'] + 1;
-        }
-        admin.database().ref(getOSLevelDataPath).update(valueAtOSLevelDataObject);
-    }
-    
-    
-
-   async function  processCampaignData(playerId,familyName,playerName,playerProfilePicUrl,duration)  {
-        var pathForCampaign = `/campaign/metrorush/${playerId}`;
-
-        console.log(" =========== CAMPAIGN DATA PROCESSING ===========");
-        
-        let getPlayerPathForCampaign = admin.database().ref(pathForCampaign);
-        var playerCampaignObj = await getPlayerPathForCampaign.once('value');
-        playerCampaignObj = playerCampaignObj.val();
-        console.log(" =========== ${playerCampaignObj} ===========");
-       // let oldDuration = playerCampaignObj['duration'];
-       if(!playerCampaignObj)
-       {     
-        playerCampaignObj = {
-            "user-name" : familyName,
-            "player-name" : playerName,
-            "profile-pic-url" : playerProfilePicUrl,
-            "duration" : duration
-        }
-       }
-       else{
-        if( playerCampaignObj['duration'] < duration) {
-            playerCampaignObj['duration'] = duration; 
-            playerCampaignObj['user-name'] = familyName;
-            playerCampaignObj['player-name'] = playerName;
-            playerCampaignObj['profile-pic-url'] = playerProfilePicUrl;
-           }
-       }
-
-       admin.database().ref(pathForCampaign).update(playerCampaignObj);
-       console.log(" =========== CAMPAIGN DATA PROCESSING DONE ===========");
-
-   }
-
-   async function processMetroRushDataCounter(playerSessionDataModel){
-     var getPathForMetroRushCounter = `campaign-traction/${playerSessionDataModel.gameId}/${playerSessionDataModel.playerId}`;
-     let metroRushCounter = admin.database().ref(getPathForMetroRushCounter);
-     let metroRushDataObject = await metroRushCounter.once('value');
-     metroRushDataObject= metroRushDataObject.val();
-     if(!metroRushDataObject){
-        metroRushDataObject = {
-            "duration" : playerSessionDataModel.duration,
-            "session-counter" : 1,
-            "last-played" : playerSessionDataModel.timestamp
-        }
-     }else{
-          metroRushDataObject['duration'] = metroRushDataObject['duration'] + playerSessionDataModel.duration;
-          metroRushDataObject['session-counter'] = metroRushDataObject['session-counter'] + 1;
-          metroRushDataObject['last-played'] = playerSessionDataModel.timestamp;
-     }
-     admin.database().ref(getPathForMetroRushCounter).update(metroRushDataObject);
-   }
-
-
-    function goldCardInboxEntryInDB(playerId,userId){
-        let timestamp = new Date();
-        var dd = String(timestamp.getDate()).padStart(2, '0');
-        var mm = String(timestamp.getMonth() + 1).padStart(2, '0');
-        var yyyy = timestamp.getFullYear();
-        let today = dd + '/' + mm + '/' + yyyy;
-        let getDate = timestamp.getDate();
-        let getTime = today;
-
-        let indexIdForPlayerTimeReward = getDate;
-        
-        var pathForGoldRewards = `/inbox/${userId}/${playerId}/special-rewards/${indexIdForPlayerTimeReward}/`;
-      
-        let goldCardIndoxDBRef = admin.database().ref(pathForGoldRewards+`fp/`);
-        let goldCardTimeInboxDBRef = admin.database().ref(pathForGoldRewards+`timestamp/`);
-        let goldCardTitleInboxDBRef = admin.database().ref(pathForGoldRewards+`title/`);
-        let goldCardDescriptionInboxDBRef = admin.database().ref(pathForGoldRewards+`desc/`);
-
-        console.log(playerId+" =========== Gold-Card is unlocked");
-        goldCardIndoxDBRef.set(10000);
-        goldCardTimeInboxDBRef.set(getTime);
-        goldCardTitleInboxDBRef.set('Gold');
-        goldCardDescriptionInboxDBRef.set('Rewarded for playing more than 15 mimutes.');
-    }
-
-    function platinumCardInboxEntryInDB(playerId,userId){
-
-        let timestamp = new Date();
-        var dd = String(timestamp.getDate()).padStart(2, '0');
-        var mm = String(timestamp.getMonth() + 1).padStart(2, '0');
-        var yyyy = timestamp.getFullYear();
-        let today = dd + '/' + mm + '/' + yyyy;
-        let getDate = timestamp.getDate();
-        let getTime = today;
-
-        let indexIdForPlayerCaloriesReward = getDate + 1;
-
-        var pathForPlatinumRewards = `/inbox/${userId}/${playerId}/special-rewards/${indexIdForPlayerCaloriesReward}/`;
-
-        let platinumCardInboxDBRef = admin.database().ref(pathForPlatinumRewards+`fp/`);
-        let platinumCardTimeInboxDBRef = admin.database().ref(pathForPlatinumRewards+`timestamp/`);
-        let platinumCardTitleInboxDBRef = admin.database().ref(pathForPlatinumRewards+`title/`);
-        let platinumCardDescritionInboxDBRef = admin.database().ref(pathForPlatinumRewards+`desc/`);
-        
-        console.log(playerId + " =========== Platinum-Card is unlocked");
-        platinumCardInboxDBRef.set(25000);
-        platinumCardTimeInboxDBRef.set(getTime);
-        platinumCardTitleInboxDBRef.set('Platinum');
-        platinumCardDescritionInboxDBRef.set('Rewarded for playing more than 30 mimutes.');
-    }      
-
 exports.processPlayerInboxCaloriesRewardData = functions.database.ref('/user-stats/{userId}/d/{yearId}/{monthId}/{dayId}/{playerId}/c')
-    .onWrite((change, context)=>{
+    .onWrite((change, context) => {
         var caloriesBurnedBefore = change.before.val();
         var caloriesBurnedAfter = change.after.val();
 
@@ -368,26 +182,30 @@ exports.processPlayerInboxCaloriesRewardData = functions.database.ref('/user-sta
         var userId = context.params.userId;
 
         // if player burned more than 25 calories then allow to process special rewards.
-        if(caloriesBurnedBefore < 25){ 
-            
-                  caloriesBurnedAfter >= 75 ? intenseWorkoutRewardCardsCardInboxEntryInDB(playerId, userId)
-                  : caloriesBurnedAfter >= 25  ? lightWorkOutRewardCardInboxEntryInDB(playerId,userId)
-                  :  console.log("=========== No any Cards are unlocked");      
-               
-            
-        }else if(caloriesBurnedBefore<75){
+        if (caloriesBurnedBefore < 25) {
+
+            caloriesBurnedAfter >= 75 ? intenseWorkoutRewardCardsCardInboxEntryInDB(playerId, userId)
+                : caloriesBurnedAfter >= 25 ? lightWorkOutRewardCardInboxEntryInDB(playerId, userId)
+                    : console.log("=========== No any Cards are unlocked");
+
+
+        } else if (caloriesBurnedBefore < 75) {
             //check for intense workout and light workout
-            caloriesBurnedAfter >= 75 ? intenseWorkoutRewardCardsCardInboxEntryInDB(playerId,userId)
-            //   : caloriesBurnedAfter >= 25  ? lightWorkOutRewardCardInboxEntryInDB(playerId,getTime,lightWorkOutCardIndoxDBRef,lightWorkOutCardTimeInboxDBRef,lightWorkOutCardTitleInboxDBRef,lightWorkOutCardDescriptionInboxDBRef)
-                :  console.log("=========== No any Cards are unlocked");    
+            caloriesBurnedAfter >= 75 ? intenseWorkoutRewardCardsCardInboxEntryInDB(playerId, userId)
+                //   : caloriesBurnedAfter >= 25  ? lightWorkOutRewardCardInboxEntryInDB(playerId,getTime,lightWorkOutCardIndoxDBRef,lightWorkOutCardTimeInboxDBRef,lightWorkOutCardTitleInboxDBRef,lightWorkOutCardDescriptionInboxDBRef)
+                : console.log("=========== No any Cards are unlocked");
 
         }
 
         return console.log("=== Function execution completed ===");
-});
+    });
 
-function lightWorkOutRewardCardInboxEntryInDB(playerId,userId){
-    
+exports.leaderBoard = functions.https.onRequest(leaderBoard.http);
+
+
+
+
+function goldCardInboxEntryInDB(playerId, userId) {
     let timestamp = new Date();
     var dd = String(timestamp.getDate()).padStart(2, '0');
     var mm = String(timestamp.getMonth() + 1).padStart(2, '0');
@@ -396,25 +214,77 @@ function lightWorkOutRewardCardInboxEntryInDB(playerId,userId){
     let getDate = timestamp.getDate();
     let getTime = today;
 
-    
+    let indexIdForPlayerTimeReward = getDate;
+
+    var pathForGoldRewards = `/inbox/${userId}/${playerId}/special-rewards/${indexIdForPlayerTimeReward}/`;
+
+    let goldCardIndoxDBRef = admin.database().ref(pathForGoldRewards + `fp/`);
+    let goldCardTimeInboxDBRef = admin.database().ref(pathForGoldRewards + `timestamp/`);
+    let goldCardTitleInboxDBRef = admin.database().ref(pathForGoldRewards + `title/`);
+    let goldCardDescriptionInboxDBRef = admin.database().ref(pathForGoldRewards + `desc/`);
+
+    console.log(playerId + " =========== Gold-Card is unlocked");
+    goldCardIndoxDBRef.set(10000);
+    goldCardTimeInboxDBRef.set(getTime);
+    goldCardTitleInboxDBRef.set('Gold');
+    goldCardDescriptionInboxDBRef.set('Rewarded for playing more than 15 mimutes.');
+}
+
+function platinumCardInboxEntryInDB(playerId, userId) {
+
+    let timestamp = new Date();
+    var dd = String(timestamp.getDate()).padStart(2, '0');
+    var mm = String(timestamp.getMonth() + 1).padStart(2, '0');
+    var yyyy = timestamp.getFullYear();
+    let today = dd + '/' + mm + '/' + yyyy;
+    let getDate = timestamp.getDate();
+    let getTime = today;
+
+    let indexIdForPlayerCaloriesReward = getDate + 1;
+
+    var pathForPlatinumRewards = `/inbox/${userId}/${playerId}/special-rewards/${indexIdForPlayerCaloriesReward}/`;
+
+    let platinumCardInboxDBRef = admin.database().ref(pathForPlatinumRewards + `fp/`);
+    let platinumCardTimeInboxDBRef = admin.database().ref(pathForPlatinumRewards + `timestamp/`);
+    let platinumCardTitleInboxDBRef = admin.database().ref(pathForPlatinumRewards + `title/`);
+    let platinumCardDescritionInboxDBRef = admin.database().ref(pathForPlatinumRewards + `desc/`);
+
+    console.log(playerId + " =========== Platinum-Card is unlocked");
+    platinumCardInboxDBRef.set(25000);
+    platinumCardTimeInboxDBRef.set(getTime);
+    platinumCardTitleInboxDBRef.set('Platinum');
+    platinumCardDescritionInboxDBRef.set('Rewarded for playing more than 30 mimutes.');
+}
+
+function lightWorkOutRewardCardInboxEntryInDB(playerId, userId) {
+
+    let timestamp = new Date();
+    var dd = String(timestamp.getDate()).padStart(2, '0');
+    var mm = String(timestamp.getMonth() + 1).padStart(2, '0');
+    var yyyy = timestamp.getFullYear();
+    let today = dd + '/' + mm + '/' + yyyy;
+    let getDate = timestamp.getDate();
+    let getTime = today;
+
+
     let indexIdForPlayerTimeReward = getDate + 2;
-    
+
     var pathForLightWorkOut = `/inbox/${userId}/${playerId}/special-rewards/${indexIdForPlayerTimeReward}/`;
-    
-    let lightWorkOutCardIndoxDBRef = admin.database().ref(pathForLightWorkOut+`fp/`);
-    let lightWorkOutCardTimeInboxDBRef = admin.database().ref(pathForLightWorkOut+`timestamp/`);
-    let lightWorkOutCardTitleInboxDBRef = admin.database().ref(pathForLightWorkOut+`title/`);
-    let lightWorkOutCardDescriptionInboxDBRef = admin.database().ref(pathForLightWorkOut+`desc/`);
-    
-    console.log(playerId+" =========== Light Workout is unlocked");
+
+    let lightWorkOutCardIndoxDBRef = admin.database().ref(pathForLightWorkOut + `fp/`);
+    let lightWorkOutCardTimeInboxDBRef = admin.database().ref(pathForLightWorkOut + `timestamp/`);
+    let lightWorkOutCardTitleInboxDBRef = admin.database().ref(pathForLightWorkOut + `title/`);
+    let lightWorkOutCardDescriptionInboxDBRef = admin.database().ref(pathForLightWorkOut + `desc/`);
+
+    console.log(playerId + " =========== Light Workout is unlocked");
     lightWorkOutCardIndoxDBRef.set(10000);
     lightWorkOutCardTimeInboxDBRef.set(getTime);
     lightWorkOutCardTitleInboxDBRef.set('Silver');
     lightWorkOutCardDescriptionInboxDBRef.set('Rewarded for burnung 25 calories.');
 }
 
-function intenseWorkoutRewardCardsCardInboxEntryInDB(playerId, userId,){
-    
+function intenseWorkoutRewardCardsCardInboxEntryInDB(playerId, userId,) {
+
     let timestamp = new Date();
     var dd = String(timestamp.getDate()).padStart(2, '0');
     var mm = String(timestamp.getMonth() + 1).padStart(2, '0');
@@ -424,16 +294,16 @@ function intenseWorkoutRewardCardsCardInboxEntryInDB(playerId, userId,){
     let getTime = today;
 
     let indexIdForPlayerCaloriesReward = getDate + 3;
-    
-    //assigning path in inbox
-    var pathForIntenceWorkOut =  `/inbox/${userId}/${playerId}/special-rewards/${indexIdForPlayerCaloriesReward}/`;
 
-    let intenceWorkOutCardInboxDBRef = admin.database().ref(pathForIntenceWorkOut+`fp/`);
-    let intenceWorkOutCardTimeInboxDBRef = admin.database().ref(pathForIntenceWorkOut+`timestamp/`);
-    let intenceWorkOutCardTitleInboxDBRef = admin.database().ref(pathForIntenceWorkOut+`title/`);
-    let intenceWorkOutCardDescriptionInboxDBRef = admin.database().ref(pathForIntenceWorkOut+`desc/`);
-    
-    console.log(playerId + " =========== Intense Workout is unlocked");            
+    //assigning path in inbox
+    var pathForIntenceWorkOut = `/inbox/${userId}/${playerId}/special-rewards/${indexIdForPlayerCaloriesReward}/`;
+
+    let intenceWorkOutCardInboxDBRef = admin.database().ref(pathForIntenceWorkOut + `fp/`);
+    let intenceWorkOutCardTimeInboxDBRef = admin.database().ref(pathForIntenceWorkOut + `timestamp/`);
+    let intenceWorkOutCardTitleInboxDBRef = admin.database().ref(pathForIntenceWorkOut + `title/`);
+    let intenceWorkOutCardDescriptionInboxDBRef = admin.database().ref(pathForIntenceWorkOut + `desc/`);
+
+    console.log(playerId + " =========== Intense Workout is unlocked");
     intenceWorkOutCardInboxDBRef.set(25000);
     intenceWorkOutCardTimeInboxDBRef.set(getTime);
     intenceWorkOutCardTitleInboxDBRef.set('Diamond');
@@ -503,9 +373,10 @@ async function processDailyStatisticsData(playerSessionDataModel) {
     return dailyStatsDataToUpdate;
 }
 
-function getGameDataRef(playerSessionDataModel){
+function getGameDataRef(playerSessionDataModel) {
     return `/fgd/${playerSessionDataModel.userId}/${playerSessionDataModel.playerId}/${playerSessionDataModel.gameId}`;
 }
+
 function getWeeklyStatsRef(playerSessionDataModel) {
     return `/user-stats/${playerSessionDataModel.userId}/w/${playerSessionDataModel.getWeekYear()}/${playerSessionDataModel.getWeek()}/${playerSessionDataModel.playerId}`;
 }
@@ -579,11 +450,11 @@ function setGameActivityStatsFromModel(playerActivityStatistics, playerSessionDa
         playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["calories-burnt"] += playerSessionDataModel.calories;
         playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["duration"] += (playerSessionDataModel.duration);
         playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["fitness-points"] += playerSessionDataModel.fitnessPoints;
-       
+
         //Game points won't exist for multiplayer mayhem, hence the following check.
         // if(playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["game-points"]){
         playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["game-points"] += playerSessionDataModel.points ? (playerSessionDataModel.points) : 0;
-           // }
+        // }
     }
     else {
         playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId] = {
@@ -597,42 +468,39 @@ function setGameActivityStatsFromModel(playerActivityStatistics, playerSessionDa
     }
 
     //Specialhandling incase of Multiplayer (same mat) games, to track the mini games
-    if(playerSessionDataModel.gameId === "multiplayermayhem") {
-        if(playerSessionDataModel.miniGameId && playerSessionDataModel.miniGameId.length > 1)
-        {
+    if (playerSessionDataModel.gameId === "multiplayermayhem") {
+        if (playerSessionDataModel.miniGameId && playerSessionDataModel.miniGameId.length > 1) {
             // if (playerActivityStatistics === null) {
             //     console.debug("Player statistics null hence creating!");
             //     playerActivityStatistics = initializeNewActivityStats(playerActivityStatistics, playerSessionDataModel);
             // }
 
-            if(playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["minigames-stats"]){
+            if (playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["minigames-stats"]) {
                 console.debug("Mini Games statistics not null hence not created!");
                 console.debug("mini game" + playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["minigames-stats"]);
-            } else {              
+            } else {
                 console.debug("Mini Games statistics null hence creating!");
-                playerActivityStatistics = initializeNewMiniGamesStats(playerActivityStatistics, playerSessionDataModel);   
+                playerActivityStatistics = initializeNewMiniGamesStats(playerActivityStatistics, playerSessionDataModel);
             }
-            
-            if(playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["minigames-stats"][playerSessionDataModel.miniGameId])
-            {
+
+            if (playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["minigames-stats"][playerSessionDataModel.miniGameId]) {
                 playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["minigames-stats"][playerSessionDataModel.miniGameId]["last-played"] = lastPlayedTimestamp;
                 playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["minigames-stats"][playerSessionDataModel.miniGameId]["calories-burnt"] += playerSessionDataModel.calories;
                 playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["minigames-stats"][playerSessionDataModel.miniGameId]["duration"] += (playerSessionDataModel.duration);
                 playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["minigames-stats"][playerSessionDataModel.miniGameId]["fitness-points"] += playerSessionDataModel.fitnessPoints;
                 playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["minigames-stats"][playerSessionDataModel.miniGameId]["game-points"] += playerSessionDataModel.points ? (playerSessionDataModel.points) : 0;
             }
-            else
-            {
+            else {
                 playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["minigames-stats"][playerSessionDataModel.miniGameId] = {
-                "last-played": lastPlayedTimestamp,
-                "calories-burnt": playerSessionDataModel.calories,
-                "duration": playerSessionDataModel.duration,
-                "fitness-points": playerSessionDataModel.fitnessPoints,
-                "game-points": playerSessionDataModel.points ? (playerSessionDataModel.points) : 0,
+                    "last-played": lastPlayedTimestamp,
+                    "calories-burnt": playerSessionDataModel.calories,
+                    "duration": playerSessionDataModel.duration,
+                    "fitness-points": playerSessionDataModel.fitnessPoints,
+                    "game-points": playerSessionDataModel.points ? (playerSessionDataModel.points) : 0,
                 };
             }
         }
-    }   
+    }
 
     if (playerSessionDataModel.gameData)
         playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["game-data"] = playerSessionDataModel.gameData;
@@ -645,8 +513,8 @@ function setActivityStatsDataFromModel(playerActivityStatistics, lastPlayedTimes
     playerActivityStatistics["total-duration"] += (playerSessionDataModel.duration);
     playerActivityStatistics["total-fitness-points"] += playerSessionDataModel.fitnessPoints;
     playerActivityStatistics["total-xp"] = (playerActivityStatistics["total-xp"] || 0) + playerSessionDataModel.xp;
-    
-    
+
+
     //TODO: uncomment this code when we start giving "fitness-cards"
     /* 
     if(!playerActivityStatistics["fitness-cards"]){
@@ -687,13 +555,13 @@ function initializeNewActivityStats(playerActivityStatistics, playerSessionDataM
         // "fitness-cards": [],
         "games-statistics": {}
     };
-    
+
     playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId] = null;
 
     return playerActivityStatistics;
 }
 
-function initializeNewMiniGamesStats(playerActivityStatistics, playerSessionDataModel){
+function initializeNewMiniGamesStats(playerActivityStatistics, playerSessionDataModel) {
 
     //First read multiplayer-mayhem data and then append minigame-stats as empty object.
     playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId] = {
@@ -701,7 +569,7 @@ function initializeNewMiniGamesStats(playerActivityStatistics, playerSessionData
         "calories-burnt": playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["calories-burnt"],
         "duration": playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["duration"],
         "fitness-points": playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["fitness-points"],
-        "game-points" : playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["game-points"],
+        "game-points": playerActivityStatistics["games-statistics"][playerSessionDataModel.gameId]["game-points"],
         "minigames-stats": {}
     }
 
@@ -710,26 +578,4 @@ function initializeNewMiniGamesStats(playerActivityStatistics, playerSessionData
     return playerActivityStatistics;
 
 }
-
-//Campaign main logic start
-app.get('/', (req, res) => {
-    var campaign = admin.database().ref("/campaign/metrorush/");
-    var leaderBoard = new Array();
-    var bannerUrl = baseURL + "banners%2Fcampaigns%2Fleaderboard_webpage_extension.png" + urlPrams;
-    campaign.once("value",(snapshot)=>{
-      snapshot.forEach(player => {
-          var profileURL = baseURL + "profile-pics%2F" +player.child("profile-pic-url").val() + urlPrams;
-          leaderBoard.push({
-            "player-name" : player.child("player-name").val(),
-            "user-name" : player.child("user-name").val(),
-            "player-profile-link" : profileURL,
-            "play-time" : player.child("duration").val()
-          })
-      })
-      res.render("index", { leaderBoard: leaderBoard, bannerUrl : bannerUrl});
-    })
-  });
- //Campaign main logic end
-
-exports.app = functions.https.onRequest(app);
 

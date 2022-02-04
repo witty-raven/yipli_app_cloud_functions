@@ -33,6 +33,12 @@
         "minimum-support-version" : {
           ".read" : "auth.provider != 'anonymous'"
         }
+      },
+      "leader-boards":{
+        "campaign":
+        {
+          ".indexOn":["tenure/start","tenure/end"]
+        }
       }
     },
 
