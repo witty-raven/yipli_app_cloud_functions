@@ -108,7 +108,7 @@ async function updateLeaderBoardEntry(session, campaign, template, entryId, entr
     }
     else {
         if (template["compete-metric"].type === "player-actions") entry["count"] = entry["count"] +  session[template["compete-metric"].type][template["compete-metric"].action];
-        else entry["count"] = session[template["compete-metric"].type];
+        else entry["count"] = entry["count"] + session[template["compete-metric"].type];
         entry["timestamp"] = session.timestamp;
         firebase.database().ref(UTILITY.paths["pathToLeaderBoards"] + "campaign/" + campaign.id + "/" + entryId).set(entry);
     }
