@@ -9,6 +9,7 @@ admin.initializeApp(functions.config().firebase);
 
 var leaderBoard = require("./leader-board/leaderBoard");
 var osStats = require("./os-stats/osStats");
+var adminPanel = require("./admin-panel/adminPanel");
 
 exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-sessions/{sessionId}')
     .onCreate((snapshot) => {
@@ -201,6 +202,8 @@ exports.processPlayerInboxCaloriesRewardData = functions.database.ref('/user-sta
     });
 
 exports.leaderBoard = functions.https.onRequest(leaderBoard.http);
+
+exports.adminPanel = functions.https.onRequest(adminPanel.adminPanel);
 
 
 
