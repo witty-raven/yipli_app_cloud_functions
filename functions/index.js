@@ -122,11 +122,6 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
             //* Update database reference for all data
             await admin.database().ref().update(updatePayload);
 
-
-            //*Taking campaign play ccounter
-
-            await processMetroRushDataCounter(playerSessionDataModel);
-
             console.log(` ----------------- FUNCTION END : ${snapshot.key} -----------------`);
             //* Remove data from staging
             return snapshot.ref.remove();
