@@ -8,6 +8,7 @@ const GameDataModel = require('./models/gameDataModel');
 admin.initializeApp(functions.config().firebase);
 
 var leaderBoard = require("./leader-board/leaderBoard");
+var updateUserData = require("./update-userData/updateUserData");
 var osStats = require("./os-stats/osStats");
 var adminPanel = require("./admin-panel/adminPanel");
 
@@ -195,6 +196,21 @@ exports.processPlayerInboxCaloriesRewardData = functions.database.ref('/user-sta
 
         return console.log("=== Function execution completed ===");
     });
+
+    
+exports.updateUserData = functions.database.ref(`/profiles/users/{userId}/display-name`)
+.onWrite((change, context) => {
+    var changedDisplayName = change.after.val();
+    var userId = context.params.userId;
+    updateUserData.leaderBoardData(userId,changedDisplayName,"")
+});
+
+exports.updateUserDetails = functions.database.ref(`/profiles/users/{userId}/profile-pic-url`)
+.onWrite((change, context) => {
+    var changedProfilePicUrl = change.after.val();
+    var userId = context.params.userId;
+    updateUserData.leaderBoardData(userId,"",changedProfilePicUrl)
+});
 
 exports.leaderBoard = functions.https.onRequest(leaderBoard.http);
 
