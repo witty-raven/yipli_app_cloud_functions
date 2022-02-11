@@ -14,7 +14,7 @@ exports.leaderBoardData = async (userId, displayName, profilePicUrl) => {
                 }
                 else if (profilePicUrl != "") {
                     var displayNamePath = `/leader-boards/campaign/${user.key}/${userId}`;
-                    admin.database().ref(displayNamePath).update({ "display-img-url": profilePicUrl });
+                    admin.database().ref(displayNamePath).update({ "display-img-url": "profile-pics" + "/" + profilePicUrl });
                 }
             }
         })
