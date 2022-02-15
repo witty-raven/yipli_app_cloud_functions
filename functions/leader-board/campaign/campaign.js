@@ -41,7 +41,8 @@ const postSession = async (query) => {
     var session = query;
     var activeCampaign = await getActiveCampaigns(session.timestamp);
     activeCampaign.forEach(campaign => {
-        if (session["game-id"] != campaign["game-id"]) return;
+        var gameList = String(campaign["game-id"]).split(",");
+        if (!gameList.includes(session["game-id"])) return;
         fetchTemplate(campaign.template).then(template => {
             if (template["compete-metric"].min > session[template["compete-metric"].type]) return;
             addEntryToLeaderBoard(session, campaign, template);
