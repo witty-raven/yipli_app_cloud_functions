@@ -8,7 +8,7 @@ const GameDataModel = require('./models/gameDataModel');
 admin.initializeApp(functions.config().firebase);
 
 var leaderBoard = require("./leader-board/leaderBoard");
-var updateUserData = require("./update-userData/updateUserData");
+var updateUserData = require("./update-user-data/updateUserData");
 var osStats = require("./os-stats/osStats");
 var adminPanel = require("./admin-panel/adminPanel");
 
@@ -198,19 +198,22 @@ exports.processPlayerInboxCaloriesRewardData = functions.database.ref('/user-sta
     });
 
     
-exports.updateUserData = functions.database.ref(`/profiles/users/{userId}/display-name`)
-.onWrite((change, context) => {
-    var changedDisplayName = change.after.val();
-    var userId = context.params.userId;
-    updateUserData.leaderBoardData(userId,changedDisplayName,"")
-});
-
-exports.updateUserDetails = functions.database.ref(`/profiles/users/{userId}/profile-pic-url`)
-.onWrite((change, context) => {
-    var changedProfilePicUrl = change.after.val();
-    var userId = context.params.userId;
-    updateUserData.leaderBoardData(userId,"",changedProfilePicUrl)
-});
+    exports.updateUserName = functions.database.ref(`/profiles/users/{userId}/display-name`)
+    .onWrite(async(change, context) => {
+        return await updateUserData.leaderBoard(change, context, updateUserData.updateInfoType["user-display-name"]);
+    });
+exports.updateUserProfilePic = functions.database.ref(`/profiles/users/{userId}/profile-pic-url`)
+    .onWrite(async(change, context) => {
+        return await updateUserData.leaderBoard(change, context, updateUserData.updateInfoType["user-display-img-url"]);
+    });
+exports.updatePlayerName = functions.database.ref(`/profiles/users/{userId}/players/{playerId}/name`)
+    .onWrite(async(change, context) => {
+        return await updateUserData.leaderBoard(change, context, updateUserData.updateInfoType["player-display-name"]);
+    });
+exports.updatePlayerProfilePic = functions.database.ref(`/profiles/users/{userId}/players/{playerId}/profile-pic-url`)
+    .onWrite(async(change, context) => {
+        return await updateUserData.leaderBoard(change, context, updateUserData.updateInfoType["player-display-img-url"]);
+    });
 
 exports.leaderBoard = functions.https.onRequest(leaderBoard.http);
 
