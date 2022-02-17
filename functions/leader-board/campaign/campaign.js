@@ -105,6 +105,7 @@ async function createLeaderBoardEntry(session, campaign, template, entryId) {
         if (template["compete-metric"].type === "player-actions") entry[session["player-id"]]["count"] = session[template["compete-metric"].type][template["compete-metric"].action];
         else entry["count"] = session[template["compete-metric"].type];
         entry["timestamp"] = session.timestamp;
+        entry["user-id"] = session["user-id"];
         fetchEntryDetails(session, campaign["contestant-type"]).then(details => {
             entry["family-name"] = details["family-name"];
             entry["display-name"] = details["display-name"];
