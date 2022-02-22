@@ -10,6 +10,7 @@ const getCampaignResult = async (query) => {
     var template = await refToTeamplates.once("value");
     var campaign = campaignInfo.val();
     campaign.template = template.val();
+    if(campaign.template["display-icon-url"]) campaign.template["display-icon-url"] = UTILITY.constructPublicURL(UTILITY.baseURLs["storageURL"], campaign.template["display-icon-url"], UTILITY.mediaType["media"]);
     campaign["banner-url"] = UTILITY.constructPublicURL(UTILITY.baseURLs["storageURL"], campaign["banner-url"], UTILITY.mediaType["media"]);
     return new Promise((resolve, reject) => {
         refToResult.once("value").then(itemList => {

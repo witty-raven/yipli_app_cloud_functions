@@ -141,7 +141,7 @@ async function getNewUsersInMonth(query) {
 
     query.from = new Date(year, month, 1);
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, month + 1 ,0);
+    query.to = new Date(year, month + 1 ,0);
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -168,7 +168,7 @@ async function getNewUsersInWeek(query) {
 
     query.from = new Date(year, 0, (1 + (week - 1) * 7));
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, 0 ,(1 + (week) * 7));
+    query.to = new Date(year, 0 ,(1 + (week) * 7));
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -214,7 +214,7 @@ async function getActiveUsersInMonth(query) {
 
     query.from = new Date(year, month, 1);
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, month + 1 ,0);
+    query.to = new Date(year, month + 1 ,0);
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -241,7 +241,7 @@ async function getActiveUsersInWeek(query) {
 
     query.from = new Date(year, 0, (1 + (week - 1) * 7));
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, 0 ,(1 + (week) * 7));
+    query.to = new Date(year, 0 ,(1 + (week) * 7));
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -284,7 +284,7 @@ async function getPlatformUsageInMonth(query) {
 
     query.from = new Date(year, month, 1);
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, month + 1 ,0);
+    query.to = new Date(year, month + 1 ,0);
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -311,7 +311,7 @@ async function getPlatformUsageInWeek(query) {
 
     query.from = new Date(year, 0, (1 + (week - 1) * 7));
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, 0 ,(1 + (week) * 7));
+    query.to = new Date(year, 0 ,(1 + (week) * 7));
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -344,7 +344,7 @@ async function getPlatformUsagefromTo(query) {
         };
         ref.once("value").then(sessions =>{
             sessions.forEach(session=>{
-                if(session.child("os").val() > 0) platformUsage[session.child("os").val()] = platformUsage[session.child("os").val()] + parseInt(session.child("duration").val());
+                if(session.child("os").val()) platformUsage[session.child("os").val()] = platformUsage[session.child("os").val()] + parseInt(session.child("duration").val());
                 else platformUsage[session.child("os").val()] = platformUsage["unknown"] + parseInt(session.child("duration").val());
             })
             delete platformUsage["null"];
@@ -361,7 +361,7 @@ async function getPlaytimeInMonth(query) {
 
     query.from = new Date(year, month, 1);
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, month + 1 ,0);
+    query.to = new Date(year, month + 1 ,0);
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -388,7 +388,7 @@ async function getPlaytimeInWeek(query) {
 
     query.from = new Date(year, 0, (1 + (week - 1) * 7));
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, 0 ,(1 + (week) * 7));
+    query.to = new Date(year, 0 ,(1 + (week) * 7));
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -434,7 +434,7 @@ async function getSessionsInMonth(query) {
 
     query.from = new Date(year, month, 1);
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, month + 1 ,0);
+    query.to = new Date(year, month + 1 ,0);
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -461,7 +461,7 @@ async function getSessionsInWeek(query) {
 
     query.from = new Date(year, 0, (1 + (week - 1) * 7));
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, 0 ,(1 + (week) * 7));
+    query.to = new Date(year, 0 ,(1 + (week) * 7));
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -514,7 +514,7 @@ async function getDayWisePlaytimeInMonth(query) {
 
     query.from = new Date(year, month, 1);
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, month + 1 ,0);
+    query.to = new Date(year, month + 1 ,0);
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -541,7 +541,7 @@ async function getDayWisePlaytimeInWeek(query) {
 
     query.from = new Date(year, 0, (1 + (week - 1) * 7));
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, 0 ,(1 + (week) * 7));
+    query.to = new Date(year, 0 ,(1 + (week) * 7));
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -598,7 +598,7 @@ async function getHourWisePlaytimeInMonth(query) {
 
     query.from = new Date(year, month, 1);
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, month + 1 ,0);
+    query.to = new Date(year, month + 1 ,0);
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {
@@ -625,7 +625,7 @@ async function getHourWisePlaytimeInWeek(query) {
 
     query.from = new Date(year, 0, (1 + (week - 1) * 7));
     query.from = query.from.getTime();
-    query.to = new Date(year + 1, 0 ,(1 + (week) * 7));
+    query.to = new Date(year, 0 ,(1 + (week) * 7));
     query.to = query.to.getTime();
 
     return new Promise((resolve, reject) => {

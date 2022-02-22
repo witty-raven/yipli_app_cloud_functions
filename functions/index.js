@@ -122,7 +122,13 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
             console.debug(updatePayload);
             //* Update database reference for all data
             await admin.database().ref().update(updatePayload);
-
+            // Grab the current value of what was written to the Realtime Database
+            console.log(playerActivityStatistics);
+            //* OS level entries 
+            console.log(` ----------------- TAKING GAME PLAY OS ENTRY -----------------`);
+            osStats.processOSLevelData(playerSessionDataModel);
+            //LeaderBoard call
+            leaderBoard.postSession(snapshot.val());
             console.log(` ----------------- FUNCTION END : ${snapshot.key} -----------------`);
             //* Remove data from staging
             return snapshot.ref.remove();
@@ -131,14 +137,7 @@ exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-
         }).catch(exception => {
             console.error(exception);
         });
-        // Grab the current value of what was written to the Realtime Database
-        console.log(playerActivityStatistics);
-        //* OS level entries 
-        console.log(` ----------------- TAKING GAME PLAY OS ENTRY -----------------`);
-        osStats.processOSLevelData(playerSessionDataModel);
 
-        //LeaderBoard call
-        leaderBoard.postSession(snapshot.val());
     });
 
 exports.processPlayerInboxPlayedTimeData = functions.database.ref('/user-stats/{userId}/d/{yearId}/{monthId}/{dayId}/{playerId}/t')
@@ -197,21 +196,21 @@ exports.processPlayerInboxCaloriesRewardData = functions.database.ref('/user-sta
         return console.log("=== Function execution completed ===");
     });
 
-    
-    exports.updateUserName = functions.database.ref(`/profiles/users/{userId}/display-name`)
-    .onWrite(async(change, context) => {
+
+exports.updateUserName = functions.database.ref(`/profiles/users/{userId}/display-name`)
+    .onWrite(async (change, context) => {
         return await updateUserData.leaderBoard(change, context, updateUserData.updateInfoType["user-display-name"]);
     });
 exports.updateUserProfilePic = functions.database.ref(`/profiles/users/{userId}/profile-pic-url`)
-    .onWrite(async(change, context) => {
+    .onWrite(async (change, context) => {
         return await updateUserData.leaderBoard(change, context, updateUserData.updateInfoType["user-display-img-url"]);
     });
 exports.updatePlayerName = functions.database.ref(`/profiles/users/{userId}/players/{playerId}/name`)
-    .onWrite(async(change, context) => {
+    .onWrite(async (change, context) => {
         return await updateUserData.leaderBoard(change, context, updateUserData.updateInfoType["player-display-name"]);
     });
 exports.updatePlayerProfilePic = functions.database.ref(`/profiles/users/{userId}/players/{playerId}/profile-pic-url`)
-    .onWrite(async(change, context) => {
+    .onWrite(async (change, context) => {
         return await updateUserData.leaderBoard(change, context, updateUserData.updateInfoType["player-display-img-url"]);
     });
 
