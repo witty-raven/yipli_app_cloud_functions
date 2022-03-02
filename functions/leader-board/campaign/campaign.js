@@ -18,6 +18,7 @@ const getCampaignResult = async (query) => {
             itemList.forEach(item => {
                 var obj ={};
                 obj.id = item.key;
+                if(item.child("user-id").val()) obj.userId = item.child("user-id").val();
                 obj["display-img-url"] = UTILITY.constructPublicURL(UTILITY.baseURLs["storageURL"], item.child("display-img-url").val(), UTILITY.mediaType["media"]);
                 obj["display-name"] = item.child("display-name").val();
                 obj["family-name"] = item.child("family-name").val();
