@@ -218,6 +218,20 @@ exports.leaderBoard = functions.https.onRequest(leaderBoard.http);
 
 exports.adminPanel = functions.https.onRequest(adminPanel.adminPanel);
 
+exports.scheduledNotificationCall =
+    functions.pubsub.schedule('15 * * * *')
+        .timeZone('Asia/Calcutta') // Users can choose timezone - default is America/Los_Angeles 
+        .onRun(async (snapshot) => {
+            await notifications.sendNotification("production");
+            return 200;
+        });
+
+exports.onHttpRequestNotification = functions.https.onRequest(async (req, res) => {
+    var mode = String(req.params.mode);
+    await notifications.sendNotification(mode);
+    res.send(200);
+    return 200;
+})
 
 
 
