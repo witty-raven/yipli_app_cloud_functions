@@ -11,6 +11,8 @@ var leaderBoard = require("./leader-board/leaderBoard");
 var updateUserData = require("./update-user-data/updateUserData");
 var osStats = require("./os-stats/osStats");
 var adminPanel = require("./admin-panel/adminPanel");
+var notifications = require("./notifications/notifications");
+var userActivity = require("./user-activity/userActivity");
 
 exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-sessions/{sessionId}')
     .onCreate((snapshot) => {
@@ -218,6 +220,8 @@ exports.leaderBoard = functions.https.onRequest(leaderBoard.http);
 
 exports.adminPanel = functions.https.onRequest(adminPanel.adminPanel);
 
+exports.userActivity = functions.https.onRequest(userActivity.http);
+
 exports.scheduledNotificationCall =
     functions.pubsub.schedule('15 * * * *')
         .timeZone('Asia/Calcutta') // Users can choose timezone - default is America/Los_Angeles 
@@ -229,7 +233,7 @@ exports.scheduledNotificationCall =
 exports.onHttpRequestNotification = functions.https.onRequest(async (req, res) => {
     var mode = String(req.params.mode);
     await notifications.sendNotification(mode);
-    res.send(200);
+    res.sendStatus(200);
     return 200;
 })
 
