@@ -139,8 +139,10 @@ function sendNotification(tokens, notification) {
             message: notificationJSON.body,
         }
     };
+    if (notificationJSON.hasOwnProperty("image")) payload.notification.image = UTILITY.constructPublicURL(UTILITY.baseURLs["storageURL"], notificationJSON['image'], UTILITY.mediaType["media"]);
+    console.log("Payload : ", payload);
     try {
-        console.log(payload);
+        console.log("Payload : ", payload);
         admin.messaging().sendToDevice(tokens, payload).then((response) => {
             removeInvalidTokens(response.results, tokens);
             admin.database().ref(UTILITY.paths["pathToNotificationsHistory"] + notification.key).set(notification.val());
