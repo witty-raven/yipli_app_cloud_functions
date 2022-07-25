@@ -12,7 +12,10 @@ var updateUserData = require("./update-user-data/updateUserData");
 var osStats = require("./os-stats/osStats");
 var adminPanel = require("./admin-panel/adminPanel");
 var notifications = require("./notifications/notifications");
-var userActivity = require("./user-activity/userActivity");
+
+//HTTPS API 
+var api = require("./api/api");
+exports.api = functions.https.onRequest(api.api);
 
 exports.processPlayerSessionData = functions.database.ref('/stage-bucket/player-sessions/{sessionId}')
     .onCreate((snapshot) => {
@@ -220,7 +223,6 @@ exports.leaderBoard = functions.https.onRequest(leaderBoard.http);
 
 exports.adminPanel = functions.https.onRequest(adminPanel.adminPanel);
 
-exports.userActivity = functions.https.onRequest(userActivity.http);
 
 exports.scheduledNotificationCall =
     functions.pubsub.schedule('15 * * * *')
