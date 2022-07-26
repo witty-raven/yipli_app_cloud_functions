@@ -615,3 +615,12 @@ function initializeNewMiniGamesStats(playerActivityStatistics, playerSessionData
 
 }
 
+exports.updateUserAndReauthenticate = functions.https.onCall((data, context) => {
+    const userId = data.userId;
+    const email = data.email;
+    const password = data.password;
+    admin.auth().updateUser(userId, {
+        email: email, password: password
+    })
+});
+
