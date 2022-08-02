@@ -75,7 +75,10 @@ const generateToken = async function (req, res) {
 
 const validateToken = async function (req, res) {
     let token = req.headers.authorization;
-    if (!token) return { "status": "error", "message": "No token provided" };
+    if (!token) return { "status": "error",statusCode : 40, "message": "No token provided" };
+    if(String(token).substring(0,7) !== "Bearer ") return { "status": "error", "message": "Invalid token" };
+    token = String(token).substring(7);
+    console.log("Validating token: " + token);
 
     let decoded = await jwt.verify(token, process.env.JWT_SECRET_KEY);
     if (!decoded) return { "status": "error", "message": "Invalid token" };
@@ -101,7 +104,10 @@ exports.authenticate = async function (req, res) {
     if (req.params.category === "auth") {
         if (authentcateRequset.hasOwnProperty(req.params.request) && req.method === "POST") {
             let response = await authentcateRequset[req.params.request](req, res);
-            res.send(response);
+            if(response.status === "error"){
+                
+            }
+            UTILITY.sendResponse(res, response, UTILITY.httpStatusCodes.OK);
         }
         else {
             res.send({ "status": "error", "message": "Invalid request" });

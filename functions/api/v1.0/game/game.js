@@ -3,8 +3,8 @@ const DEFS = require("../definations/definations");
 
 
 const gameDetails = async (params) => {
-    if (!params || !params.client) return { status: "error", message: "Client not found" };
-    if (!params.query.gameId) return { status: "error", message: "GameId not found" };
+    if (!params || !params.client) return { status: "error",statusCode: UTILITY.httpStatusCodes["Not Acceptable"], message: "Client not found" };
+    if (!params.query.gameId) return { status: "error",statusCode: UTILITY.httpStatusCodes["Not Acceptable"], message: "GameId not found" };
 
     var response = {};
 
@@ -12,7 +12,7 @@ const gameDetails = async (params) => {
     else if (params.method === "POST") response = await updateGameDetails(params);
     else if (params.method === "DELETE") response = await removeGameDetails(params);
 
-    return response || { status: "error", message: "Request not processed" };
+    return response || { status: "error",statusCode: UTILITY.httpStatusCodes["No Content"], message: "Request not processed" };
 }
 
 const getGameDetails = async (params) => {
@@ -34,7 +34,7 @@ const getGameDetails = async (params) => {
 
     let gameDetailsObj = await Promise.all(gameDetailsPromises);
     let gameDetails = {};
-    for (let i = 0; i < gameDetailsObj.length; i++) {
+    for (let i = 0; i < gameDetailsObj.length; i++) {;
         if (gameDetailsObj[i].status === "error") gameDetails[gameDetailsList[i]] = "NA";
         else gameDetails[gameDetailsList[i]] = gameDetailsObj[i][gameDetailsList[i]];
     }
@@ -55,7 +55,6 @@ async function getGameVersions(gameId, params) {
     let gameVersions = await UTILITY.database.game.read.versions(gameId);
     if(params.platform){
         let _gameVersions = {};
-        console.log(params.platform);
         _gameVersions["latest"] = (gameVersions.latest[params.platform]);
         _gameVersions["minimum"] = (gameVersions.minimum[params.platform]);
         return { status: "success", versions: _gameVersions };
@@ -83,11 +82,20 @@ async function getGameType(gameId, params) {
 }
 async function getGameUrls(gameId, params) {
     let gameUrls = await UTILITY.database.game.read.urls(gameId);
-    return { status: "success", urls: gameUrls };
+    if(params.platform){
+        let gameUrl = gameUrls[params.platform];
+        return { status: "success", urls: gameUrl };
+        
+    }
+    else return { status: "success", urls: gameUrls };
 }
 async function getGameInfo(gameId, params) {
     let gameInfo = await UTILITY.database.game.read.info(gameId);
     return { status: "success", info: gameInfo };
+}
+async function getWrks(gameId, params) {
+    let gameWrks = await UTILITY.database.game.read.Wrks(gameId);
+    return { status: "success", wrk: gameWrks };
 }
 
 
@@ -100,7 +108,8 @@ const getGameDetailsList = {
     "mode" : getGameMode,
     "type" : getGameType,
     "urls" : getGameUrls,
-    "info" : getGameInfo
+    "info" : getGameInfo,
+    "wrk" : getWrks
 }
 
 exports.requests = {

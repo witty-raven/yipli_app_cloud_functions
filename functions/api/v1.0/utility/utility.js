@@ -10,19 +10,25 @@ const makeResponseForApp = (status, data) => {
 }
 
 const makeResponseForGame = (status, data) => {
-    if(!data.items || !data.items.split(",").length) makeError("error", "Empty Response", "game");
-    let response = {};
-    response.status = data.status;
-    response.message = data.message;
-    response.items = data.items;
-    let dataList = data.items.split(",");
-    dataList.forEach((item, index) => {
-        for(let key in data[item]){
-            response[key] = data[item][key];
-        }
-    })
+    //not currently used
+    // if(!data.items || !data.items.split(",").length) makeError("error", "Empty Response", "game");
+    // let response = {};
+    // response.status = data.status;
+    // response.message = data.message;
+    // response.items = "";
+    // let itemCount = 0;
+    // let dataList = data.items.split(",");
+    // dataList.forEach((item, index) => {
+    //     for(let key in data[item]){
+    //         response.items += (itemCount === 0) ? key :  "," + key;
+    //         itemCount++;
+    //         response[key] = data[item][key];
+    //     }
+    // })
+    // return response;
 
-    return response;
+    if(!data.items || !data.items.split(",").length) makeError("error", "Empty Response", "app");
+    return data;
 }
 
 const makeResponseForWeb = (status, data) => {
@@ -48,8 +54,74 @@ const makeError = (status, message, client) => {
     return { status: status, message: message };
 }
 
-const sendResponse = (res, message) => {
-    res.send(message);
+const sendResponse = (res, message, status) => {
+    res.status(status).send(message);
+}
+
+const httpStatusCodes = {
+    "Continue": 100,
+    "Switching Protocols": 101,
+    "Processing": 102,
+    "OK": 200,
+    "Created": 201,
+    "Accepted": 202,
+    "Non-authoritative Information": 203,
+    "No Content": 204,
+    "Reset Content": 205,
+    "Partial Content": 206,
+    "Multi-Status": 207,
+    "Already Reported": 208,
+    "IM Used": 226,
+    "Multiple Choices": 300,
+    "Moved Permanently": 301,
+    "Found": 302,
+    "See Other": 303,
+    "Not Modified": 304,
+    "Use Proxy": 305,
+    "Temporary Redirect": 307,
+    "Permanent Redirect": 308,
+    "Bad Request": 400,
+    "Unauthorized": 401,
+    "Payment Required": 402,
+    "Forbidden": 403,
+    "Not Found": 404,
+    "Method Not Allowed": 405,
+    "Not Acceptable": 406,
+    "Proxy Authentication Required": 407,
+    "Request Timeout": 408,
+    "Conflict": 409,
+    "Gone": 410,
+    "Length Required": 411,
+    "Precondition Failed": 412,
+    "Payload Too Large": 413,
+    "Request-URI Too Long": 414,
+    "Unsupported Media Type": 415,
+    "Requested Range Not Satisfiable": 416,
+    "Expectation Failed": 417,
+    "I'm a teapot": 418,
+    "Misdirected Request": 421,
+    "Unprocessable Entity": 422,
+    "Locked": 423,
+    "Failed Dependency": 424,
+    "Upgrade Required": 426,
+    "Precondition Required": 428,
+    "Too Many Requests": 429,
+    "Request Header Fields Too Large": 431,
+    "Connection Closed Without Response": 444,
+    "Unavailable For Legal Reasons": 451,
+    "Client Closed Request": 499,
+    "Internal Server Error": 500,
+    "Not Implemented": 501,
+    "Bad Gateway": 502,
+    "Service Unavailable": 503,
+    "Gateway Timeout": 504,
+    "HTTP Version Not Supported": 505,
+    "Variant Also Negotiates": 506,
+    "Insufficient Storage": 507,
+    "Loop Detected": 508,
+    "Not Extended": 510,
+    "Network Authentication Required": 511,
+    "Network Connect Timeout Error": 599
 }
 
 
@@ -58,6 +130,8 @@ exports.makeError = makeError;
 exports.sendResponse = sendResponse;
 
 exports.authAccessCategoryList = require("./accessScemas/authAccessCategoryList.json");
+exports.httpStatusCodes = httpStatusCodes;
+
 
 exports.validateAPIURL = (req) => {
 
@@ -67,7 +141,7 @@ exports.validateAPIURL = (req) => {
     const DEFS = require("../definations/definations");
 
 
-    if (!category || DEFS.categories.hasOwnProperty(category) === false) return { status: "error", message: "Category not found" };
+    if (!category || !DEFS.categories.hasOwnProperty(category)) return { status: "error", message: "Category not found" };
     if (!request || !DEFS.categoryRequests[category].includes(request)) return { status: "error", message: "Request not valid" };
 
     return { status: "success", message: "Valid URL" };
@@ -104,9 +178,9 @@ exports.makeURL = (url, params) => {
 const isEmpty = (obj, type) => {
     if (type === "object") {
         for (let key in obj) {
-            if (obj.hasOwnProperty(key)) return true;
+            if (obj.hasOwnProperty(key)) return false;
         }
-        return false;
+        return true;
     }
     if (type === "array") {
         return obj.length === 0;
@@ -117,7 +191,7 @@ const isEmpty = (obj, type) => {
         else if (obj === undefined) return true;
         else return false;
     }
-    return false;
+    return true;
 }
 exports.isEmpty = isEmpty;
 
@@ -143,6 +217,7 @@ const databsePaths = {
     inventory: "/inventory/",
     leaderBoards: "/leader-boards/",
     profilePicStoragePath : "profile-pics/",
+    gameStoragePath : "game-setups/",
     gameIconStoragePath : "game-icons/",
     fcmTokensNew: "/trial/fcm-tokens-new/",
 }
@@ -251,10 +326,56 @@ exports.database = {
                 let ref = await db.ref(databsePaths.userProfile + userId + "/current-mat-id").once("value");
                 return ref.val();
             },
+        },
+        write: {
+            name: async (userId, name) => {
+                try {
+                    await db.ref(databsePaths.userProfile + userId + "/display-name").set(name);
+                    return true;
+                }
+                catch (error) {
+                    console.log(error);
+                    return false;
+                }
+            },
+            email: async (userId, email) => {
+                try {
+                    await db.ref(databsePaths.userProfile + userId + "/email").set(email);
+                    return true;
+                }
+                catch (error) {
+                    console.log(error);
+                    return false;
+                }
+            },
+            phone: async (userId, phone) => {
+                try {
+                    await db.ref(databsePaths.userProfile + userId + "/contact-no").set(phone);
+                    return true;
+                }
+                catch (error) {
+                    console.log(error);
+                    return false;
+                }
+            },
+            userProfilePic: async (userId, profilePicUrl) => {
+                try {
+                    await db.ref(databsePaths.userProfile + userId + "/profile-pic-url").set(profilePicUrl);
+                    return true;
+                }
+                catch (error) {
+                    console.log(error);
+                    return false;
+                }
+            }
         }
     },
     mat : {
         read : {
+            mat : async (matId, userId) => {
+                let ref = await db.ref(databsePaths.userProfile + userId + "/mats/" + matId).once("value");
+                return ref.val();
+            },
             name : async (matId, userId) => {
                 let ref = await db.ref(databsePaths.userProfile + userId + "/mats/"+ matId +"/display-name").once("value");
                 return ref.val();
@@ -311,9 +432,11 @@ exports.database = {
                 return ref.val();
             },
             urls : async (gameId) => {
+                const win = await db.ref(databsePaths.inventory + "games/" + gameId + "/storage-exe-name").once("value");
                 var urlList = {
                     a : await db.ref(databsePaths.inventory + "games/" + gameId + "/android-url").once("value"),
                     i : await db.ref(databsePaths.inventory + "games/" + gameId + "/ios-url").once("value"),
+                    w : constructPublicURL(baseUrls.storage,databsePaths.gameStoragePath + win.val() , mediaType.media),
                 }
                 return urlList;
             },
@@ -334,8 +457,13 @@ exports.database = {
                     daysBeforeNextUpdatePrompt : await db.ref(databsePaths.inventory + "games/" + gameId + "/days-before-next-update-prompt").once("value"),
                     onlyMatPlayMode : await db.ref(databsePaths.inventory + "games/" + gameId + "/only-mat-play-mode").once("value"),
                     iconImageUrl : IconImageUrl,
+                    versionUpdateMessage : await db.ref(databsePaths.inventory + "games/" + gameId + "/version-update-message").once("value"),
                 }
                 return gameInfo;
+            },
+            Wrks : async (gameId) => {
+                let ref = await db.ref(databsePaths.inventory + "games/" + gameId + "/win-registry-key").once("value");
+                return ref.val();
             }
         }
     },
