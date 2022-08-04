@@ -40,6 +40,7 @@ exports.campaign = async (req, res) => {
     const params = req.params;
 
     query.campaignId = params.campaignId;
+    if(params.userId) query.userId = params.userId;
     
     if (!verifyAPITocken(query.apiTocken)) makeResponse(res, null, UTILITY.httpStatusCodes["Forbidden"]);
     

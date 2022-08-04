@@ -7,6 +7,40 @@ exports.checks = {
     "null-check": nullCheck,
 }
 
+exports.decodeParams = (req) => {
+    let support = req.campaignId;
+    let params = {};
+    if (!support || String(support).substring(0, 1) !== "~") return null;
+    let supportList = support.split("~");
+    for (let i = 1; i < supportList.length; i++) {
+        let param = supportList[i].split("=");
+        params[param[0]] = param[1];
+    }
+    return params;
+}
+
+
+const isEmpty = (obj, type) => {
+    if (type === "object") {
+        for (let key in obj) {
+            if (obj.hasOwnProperty(key)) return true;
+        }
+        return false;
+    }
+    if (type === "array") {
+        return obj.length === 0;
+    }
+    if (type === "string") {
+        if (obj === "") return true;
+        else if (obj === null) return true;
+        else if (obj === undefined) return true;
+        else return false;
+    }
+    return false;
+}
+exports.isEmpty = isEmpty;
+
+
 exports.httpStatusCodes = {
     "Continue": 100,
     "Switching Protocols": 101,
