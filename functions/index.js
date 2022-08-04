@@ -624,3 +624,37 @@ exports.updateUserAndReauthenticate = functions.https.onCall((data, context) => 
     })
 });
 
+exports.getMoreOptions = functions.https.onCall(async (data, res) => {
+    var val = data.value;
+    var value;
+    let getvaluePath = admin.database().ref(`inventory/more-options`);
+    await getvaluePath.child(val).once("value", (data) => {
+        value = data.val();
+        console.log(value);
+        return value;
+    });
+    console.log("value is : " + value);
+    return value;
+})
+
+exports.getUrl = functions.https.onCall(async (data, res) => {
+    var url;
+    let getUrlPath = admin.database().ref(`inventory/yipli-app/urls`);
+    await getUrlPath.child("get-mat-in").once("value", (data) => {
+        url = data.val();
+        return url;
+    })
+    return `${url}`;
+})
+
+exports.removeFcmTokenOnLogout = functions.https.onCall((data, context) => {
+    const userId = data.userId;
+    const token = data.token;
+    const tokenKey = data.tokenKey;
+    const platform = data.platform;
+    admin.database().ref('listOfTokensOnLogout' + '/' + userId + '/' + platform + '/' + tokenKey).set(token);
+    admin.database().ref('/fcm-tokens/' + userId + '/' + platform + '/' + tokenKey).remove();
+    return `successfully received : ${userId} + "token is" + ${token} + "tokenKey is" + ${tokenKey} + "platform" : ${platform}`;
+});
+
+exports.userActivity = functions.https.onRequest(userActivity.http);
