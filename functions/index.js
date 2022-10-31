@@ -12,6 +12,7 @@ var updateUserData = require("./update-user-data/updateUserData");
 var osStats = require("./os-stats/osStats");
 var adminPanel = require("./admin-panel/adminPanel");
 var notifications = require("./notifications/notifications");
+var userActivity = require("./user-activity/userActivity");
 
 //HTTPS API 
 var api = require("./api/api");
