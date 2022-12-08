@@ -158,7 +158,18 @@ const getCampaignList = async (query) => {
         params.start,
         params.end
       );
-      resolve(campaignList);
+      if(campaignList.length>0){
+        campaignList.forEach((campaign) => {
+          campaign["banner-url"] = UTILITY.constructPublicURL(
+            UTILITY.baseURLs["storageURL"],
+            campaign["banner-url"],
+            UTILITY.mediaType["media"]
+          );
+        });
+        resolve(campaignList);
+      }else{
+        resolve([]);
+      }
     } else {
       const params = UTILITY.decodeParams(query);
       if(UTILITY.isEmpty(params)) resolve ("Invaild Request");   

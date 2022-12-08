@@ -62,8 +62,7 @@ async function sendCustomNotification(template, notification) {
 
     var users = await targetType[target]();
     var tokenList = {
-        android: [],
-        ios: []
+        android: []     
     };
 
     var custamDataArray = await getCustmizedData(users, custamizationCriteria);
@@ -92,22 +91,29 @@ async function sendGenericNotification(template, notification) {
     // console.log(users)
 
     var tokenList = {
-        android: [],
-        ios: []
+        android: []
     };
 
     for (var user in users) {
         for (var platform in users[user]) {
-            for (var token in users[user][platform]) {
-                if (!tokenList[platform].includes(users[user][platform][token])) {
-                    tokenList[platform].push(users[user][platform][token]);
-                }
+            if(platform == "android")
+            {   
+                console.log("Users platform is" + users[user][platform])
+                for (var token in users[user][platform]) {
+                    console.log("Inside the android loop")
+                    if (!tokenList[platform].includes(users[user][platform][token])) {
+                        tokenList[platform].push(users[user][platform][token]);
+                        console.log("Inside the platform loop")
+                    }
+                }  
             }
         }
     }
+    
 
     // console.log(tokenList);
     for (var platform in tokenList) sendNotification(tokenList[platform], notification);
+    // sendNotification(tokenList[platform], notification);
     return;
 }
 
