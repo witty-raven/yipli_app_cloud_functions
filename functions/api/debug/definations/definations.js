@@ -19,8 +19,8 @@ exports.categoryRequests = {
     "fgd" : ["read"],
     "payments" : ["razorPay"],
     "discounts" : ["discountCode"],
-    "leads" : ["leadDetails","read","update","delete"],
-    "coupons" : ["generateCoupons","getAllCoupons","updateCoupon"],
+    "leads" : ["leadDetails","createSession","read","update","delete"],
+    "coupons" : ["generateCoupons","getAllCoupons","updateCoupon","couponPost","couponUpdate","signupCoupons","signinCoupons"],
     
 }
 exports.unprotectedRequests = ["isAlive", "urls", "razorPay","leadDetails","generateCoupons","discountCode"];

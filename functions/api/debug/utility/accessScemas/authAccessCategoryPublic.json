@@ -1,0 +1,25 @@
+{
+    "type": "object",
+    "properties": {
+        "read": {
+            "type": "boolean",
+            "default": false
+        },
+        "write": {
+            "type": "boolean",
+            "default": false
+        },
+        "request": {
+            "type": "object",
+            "properties": {
+                "urls": {
+                    "type": "array"
+                },
+                "schemas": {
+                    "type": "array"
+                }
+            }
+        }
+    }
+
+}

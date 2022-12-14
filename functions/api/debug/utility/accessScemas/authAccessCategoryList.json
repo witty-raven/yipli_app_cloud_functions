@@ -1,0 +1,70 @@
+{
+    "public":{
+        "read" : true,
+        "write" : false,
+        "methods" : {
+            "GET" : {
+                "requests": {
+                    "/status/server": {
+                        "description": "Get the current status of the server",
+                        "responses": {
+                            "200": {
+                                "description": "The current status of the server",
+                                "schema": {
+                                    "$ref": "#/definitions/Status"
+                                }
+                            }
+                        }
+                    },
+                    "urls/:support": {
+                        "description": "Get All Publically available URLs",
+                        "responses": {
+                            "200": {
+                                "description": "List of Publically available URLs",
+                                "schema": {
+                                    "$ref": "./definitions/URLs.json"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "auth" : {
+        "read" : false,
+        "write" : false,
+        "methods" : {
+            "GET" : {
+                "requests": {
+                    "/ ": {
+                        "description": "Get the auth API discovery document",
+                        "responses": {
+                            "200": {
+                                "description": "The auth API discovery document",
+                                "schema": {
+                                    "$ref": "#/definitions/Auth-info.json"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "POST" : {
+                "requests": {
+                    "/": {
+                        "description": "Get the current status of the server",
+                        "responses": {
+                            "200": {
+                                "description": "The current status of the server",
+                                "schema": {
+                                    "$ref": "#/definitions/Status"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

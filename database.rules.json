@@ -58,7 +58,9 @@
       "users":{
         ".indexOn":[
           "contact-no",
-          "email"
+          "email",
+          "display-name",
+          "profile-pic-url"
         ]
       }
     },

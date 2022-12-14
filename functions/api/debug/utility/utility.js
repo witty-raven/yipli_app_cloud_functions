@@ -111,6 +111,7 @@ const sendResponse = (res, message, status) => {
         status: "error",
         message:"Internal server error"
     });
+    // console.log("message", message, "status", status);
     res.status(status).send(message);
 }
 
