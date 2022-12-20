@@ -113,8 +113,7 @@ exports.paths = {
     'pathToSessions' : "/sessions/game-sessions/",
     'pathToGameInventory' : "/inventory/games/",
     'pathToLeaderBoards' : "/leader-boards/",
-    'pathToLeaderBoardsInventory' : "/inventory/leader-boards/",
-    "pathToInventory" : "/inventory/",
+    'pathToLeaderBoardsInventory' : "/inventory/leader-boards/"
 }
 
 exports.days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

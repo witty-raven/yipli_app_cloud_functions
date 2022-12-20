@@ -2,7 +2,6 @@ const firebase = require("firebase-admin");
 const UTILITY = require("../utility/utility");
 const REQUEST = "Campaign Leader Board";
 const getCampaignResult = async (query) => {
-  console.log(query,"query")
   const campaignId = query.campaignId;
   var refToResult = firebase
     .database()
@@ -35,8 +34,7 @@ const getCampaignResult = async (query) => {
     UTILITY.mediaType["media"]
   );
   return new Promise((resolve, reject) => {
-    refToResult.once("value").then(async(itemList) => {
-
+    refToResult.once("value").then((itemList) => {
       var List = [];
       itemList.forEach((item) => {
         var obj = {};
@@ -58,34 +56,8 @@ const getCampaignResult = async (query) => {
         } else obj.count = item.child("count").val();
         List.push(obj);
       });
-      if((query.debug)==="false" || !query.debug){
-        console.log("List")
-        let Ids = await firebase
-          .database()
-          .ref(UTILITY.paths["pathToInventory"] + "debug/user-ids/")
-          .once("value");
-
-        let debugIds = String(Ids.val()).split(",");
-        console.log(debugIds,"debugIds")
-        List = List.filter((item) => !debugIds.includes(item.userId));
-      }
-
-      List = List.sort((a, b) => {
-        return b["count"] - a["count"];
-      });
-      List.forEach((item, index) => {
-        item.rank = index + 1;
-      });
-      if(query.userId){ 
-        campaign.result = List.find((item) => item.id === query.userId);
-        console.log(campaign.result,"campaign.result")
-        resolve(campaign);
-      }
-      else{
-        campaign.result = List;
-        resolve(campaign);
-      }
-      
+      campaign.result = List;
+      resolve(campaign);
     });
   });
 };
@@ -96,7 +68,7 @@ const addPriotityToCampaigns = async (allCampaigns,userId) => {
     var obj = campaign.val();
     if (
       obj.tenure.start < new Date().getTime() &&
-      obj.tenure.end >= new Date().getTime()
+      obj.tenure.end >= new Date().getTime
     ) {
       obj.priority = 2;
     } else if (obj.tenure.start > new Date().getTime()) {
@@ -105,16 +77,9 @@ const addPriotityToCampaigns = async (allCampaigns,userId) => {
       obj.priority = 1;
     }
     obj._id = campaign.key;
-    obj["banner-url"] = UTILITY.constructPublicURL(
-      UTILITY.baseURLs["storageURL"],
-      campaign.child("banner-url").val(),
-      UTILITY.mediaType["media"]
-    );
     if(userId) obj.userId = userId;
     campaigns.push(obj);
   });
-
-
   return campaigns;
 };
 
@@ -153,22 +118,10 @@ const campaignListType = {
   },
   active: async (userId) => {
     var activeCampaigns = await getActiveCampaigns(
-new Date().getTime()
+      new Date().getTime()
       );
-      var campaigns = [];
-      activeCampaigns.forEach((campaign) => {
-        var obj = campaign;
-        obj.priority = 1;
-        obj._id = campaign.key;
-        obj["banner-url"] = UTILITY.constructPublicURL(
-          UTILITY.baseURLs["storageURL"],
-          campaign["banner-url"],
-          UTILITY.mediaType["media"]
-        );
-        if(userId) obj.userId = userId;
-        campaigns.push(obj);
-      });
-      return campaigns;
+      activeCampaigns = await addPriotityToCampaigns(activeCampaigns,userId);
+      return activeCampaigns;
     },
     upcoming: async (userId) => {
       var upcomingCampaigns = await getUpcomingCampaignslist();
@@ -269,20 +222,7 @@ async function getCampaignsFromTo(start,end) {
   return activeCampaigns;
 }
 
-const debugIds = async (query) => {
-  return new Promise(async (resolve, reject) => {
-    var Ids = await firebase
-    .database()
-    .ref(UTILITY.paths["pathToInventory"] + "debug/user-ids/")
-    .once("value");
-
-    let debugIds = String(Ids.val()).split(",");
-    resolve(debugIds);
-  });
-}
-
 const postSession = async (query) => {
-  console.log(query, "postSession");
   var session = query;
   var activeCampaign = await getActiveCampaigns(session.timestamp);
   activeCampaign.forEach((campaign) => {
@@ -564,5 +504,4 @@ exports.request = {
   listActive: getActiveCampaigns,
   postSession: postSession,
   createNew: createNew,
-  debugIds: debugIds,
 };

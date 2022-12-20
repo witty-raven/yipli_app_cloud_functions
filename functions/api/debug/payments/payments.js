@@ -6,7 +6,7 @@ const { getFirestore } = require("firebase-admin/firestore");
 const database = getFirestore()
 
 const document = database.collection("Discounts")
-
+const doc = database.collection("Orders")
 
 const RazorpayParent = async (params) => {
 
@@ -30,10 +30,8 @@ const RazorpayParent = async (params) => {
 
 
 const instance = new Razorpay({ 
-       // key_id: process.env.RAZORPAY_KEY_ID, 
-    // key_secret: process.env.RAZORPAY_KEY_SECRET 
-    key_id: "rzp_test_XrAYcmlWq9W41C",
-    key_secret: "UarlHdZHyrvkyje0rMlh33Ly"
+    key_id: process.env.RAZORPAY_KEY_ID, 
+    key_secret: process.env.RAZORPAY_KEY_SECRET
 })
 
 
@@ -90,6 +88,29 @@ const verifyRazorpayPayment = async (params) => {
 
 }
 
+const orderDetails = async (params) => {
+    params.body = JSON.parse(params.body);
+    let orderAdded = await doc.doc(params.body.userId).set(params.body,{ merge: true }).then((doc) => {
+        return UTILITY.makeResponse(UTILITY.httpStatusCodes["OK"],{
+            status: "success",
+            statusCode: UTILITY.httpStatusCodes["OK"],
+            items : "response",
+            response: params.body,
+        },"web")
+        
+    }).catch((err) => {
+            return UTILITY.makeError(UTILITY.httpStatusCodes["Bad Request"],{
+                status: "error",
+                statusCode: UTILITY.httpStatusCodes["Bad Request"],
+                items : "response",
+                response: "Invalid code"
+            },"web")
+    })
+
+
+    return orderAdded;
+}
+
 
 exports.requests = {
     razorPay: RazorpayParent
@@ -98,5 +119,6 @@ exports.requests = {
 
 const razorpayMode = {
     "create": createRazorpayOrder,
-    "verify": verifyRazorpayPayment
+    "verify": verifyRazorpayPayment,
+    "order": orderDetails
 }
